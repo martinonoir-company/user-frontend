@@ -41,7 +41,7 @@ const channels = [
     icon: MapPin,
     label: "Visit Us",
     value: "Lagos, Nigeria",
-    description: "Our flagship showroom is open by appointment.",
+    description: "Our store is open Monday through Saturday.",
     href: "#",
     cta: "Get directions",
   },
