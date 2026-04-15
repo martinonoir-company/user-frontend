@@ -7,7 +7,6 @@ import {
   CreditCard,
   ArrowRight,
 } from "lucide-react";
-import Link from "next/link";
 import { useRef } from "react";
 import { useInView } from "@/hooks/useInView";
 
