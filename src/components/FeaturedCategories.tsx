@@ -36,14 +36,14 @@ const FALLBACK_CATEGORIES: DisplayCategory[] = [
     alias: "Office Bags",
     description: "Classic silhouettes for the modern workspace",
     href: "/category/messenger-bags",
-    image: "https://images.unsplash.com/photo-1622560480605-d83c853bc5c5?w=800&h=1000&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1547949003-9792a18a2601?w=800&h=1000&fit=crop&q=80",
   },
   {
     title: "Travel Bags",
     alias: "Duffel Bags",
     description: "Built for adventure, generous capacity",
     href: "/category/travel-bags",
-    image: "https://images.unsplash.com/photo-1553531384-cc64ac80f931?w=800&h=1000&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=800&h=1000&fit=crop&q=80",
   },
 ];
 

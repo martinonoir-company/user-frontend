@@ -75,9 +75,10 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-8">
             {[
               { label: "New Arrivals", href: "/new-arrivals" },
-              { label: "Bags", href: "/category/bags" },
-              { label: "Clothing", href: "/category/clothing" },
-              { label: "Accessories", href: "/category/accessories" },
+              { label: "Crossbody / Sling", href: "/category/crossbody-bags" },
+              { label: "Backpack / Laptop", href: "/category/backpack-bags" },
+              { label: "Messenger / Office", href: "/category/messenger-bags" },
+              { label: "Travel / Duffel", href: "/category/travel-bags" },
               { label: "Sale", href: "/sale" },
             ].map((item) => (
               <Link
@@ -164,9 +165,10 @@ export default function Header() {
         <div className="flex flex-col p-6 gap-1">
           {[
             { label: "New Arrivals", href: "/new-arrivals" },
-            { label: "Bags", href: "/category/bags" },
-            { label: "Clothing", href: "/category/clothing" },
-            { label: "Accessories", href: "/category/accessories" },
+            { label: "Crossbody / Sling Bags", href: "/category/crossbody-bags" },
+            { label: "Backpack / Laptop Bags", href: "/category/backpack-bags" },
+            { label: "Messenger / Office Bags", href: "/category/messenger-bags" },
+            { label: "Travel / Duffel Bags", href: "/category/travel-bags" },
             { label: "Sale", href: "/sale" },
           ].map((item, i) => (
             <Link
