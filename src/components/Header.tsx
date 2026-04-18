@@ -74,7 +74,6 @@ export default function Header() {
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
             {[
-              { label: "New Arrivals", href: "/new-arrivals" },
               { label: "Crossbody / Sling", href: "/category/crossbody-bags" },
               { label: "Backpack / Laptop", href: "/category/backpack-bags" },
               { label: "Messenger / Office", href: "/category/messenger-bags" },
@@ -164,7 +163,6 @@ export default function Header() {
       >
         <div className="flex flex-col p-6 gap-1">
           {[
-            { label: "New Arrivals", href: "/new-arrivals" },
             { label: "Crossbody / Sling Bags", href: "/category/crossbody-bags" },
             { label: "Backpack / Laptop Bags", href: "/category/backpack-bags" },
             { label: "Messenger / Office Bags", href: "/category/messenger-bags" },
