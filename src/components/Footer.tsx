@@ -36,17 +36,16 @@ function FacebookIcon({ size = 16 }: { size?: number }) {
 const footerLinks = {
   Shop: [
     { label: "New Arrivals", href: "/new-arrivals" },
-    { label: "Bags", href: "/category/bags" },
-    { label: "Clothing", href: "/category/clothing" },
-    { label: "Accessories", href: "/category/accessories" },
-    { label: "Sale", href: "/sale" },
-    { label: "Gift Cards", href: "/gift-cards" },
+    { label: "Crossbody Bags", href: "/category/crossbody-bags" },
+    { label: "Backpack Bags", href: "/category/backpack-bags" },
+    { label: "Messenger Bags", href: "/category/messenger-bags" },
+    { label: "Travel Bags", href: "/category/travel-bags" },
+    { label: "All Bags", href: "/shop" },
   ],
   Company: [
     { label: "About Us", href: "/about" },
     { label: "Careers", href: "/careers" },
     { label: "Press", href: "/press" },
-    { label: "Blog", href: "/blog" },
     { label: "Sustainability", href: "/sustainability" },
   ],
   Support: [
@@ -80,8 +79,8 @@ export default function Footer() {
               </span>
             </Link>
             <p className="mt-4 text-sm text-white/50 leading-relaxed max-w-xs">
-              Crafted with intention. Premium leather bags, designer clothing,
-              and luxury accessories for the modern individual.
+              Crafted with intention. Premium leather bags for every journey —
+              crossbody, backpacks, messengers, and travel duffels.
             </p>
 
             {/* Contact info */}

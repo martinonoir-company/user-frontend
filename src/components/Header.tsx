@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -10,10 +10,15 @@ import {
   X,
   Heart,
 } from "lucide-react";
+import { useCart } from "@/lib/cart-context";
+import SearchOverlay from "@/components/SearchOverlay";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { itemCount } = useCart();
+  const closeSearch = useCallback(() => setIsSearchOpen(false), []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -22,6 +27,7 @@ export default function Header() {
   }, []);
 
   return (
+    <>
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-emphatic ease-enter ${
         isScrolled
@@ -94,6 +100,7 @@ export default function Header() {
           <div className="flex items-center gap-1 md:gap-2">
             <button
               id="search-toggle"
+              onClick={() => setIsSearchOpen(true)}
               className={`p-2 transition-colors duration-micro rounded-full ${
                 isScrolled
                   ? "text-ink-500 hover:text-ink-900 hover:bg-surface-1"
@@ -125,20 +132,23 @@ export default function Header() {
             >
               <User size={20} />
             </Link>
-            <button
+            <Link
+              href="/cart"
               id="cart-toggle"
               className={`relative p-2 transition-colors duration-micro rounded-full ${
                 isScrolled
                   ? "text-ink-500 hover:text-ink-900 hover:bg-surface-1"
                   : "text-white/80 hover:text-white hover:bg-white/10"
               }`}
-              aria-label="Shopping bag (0 items)"
+              aria-label={`Shopping bag (${itemCount} items)`}
             >
               <ShoppingBag size={20} />
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary-700 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                0
-              </span>
-            </button>
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary-700 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-[scale-in_0.2s_ease-out]">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
+            </Link>
           </div>
         </div>
       </nav>
@@ -188,5 +198,9 @@ export default function Header() {
         </div>
       </div>
     </header>
+
+    {/* Search overlay */}
+    <SearchOverlay isOpen={isSearchOpen} onClose={closeSearch} />
+    </>
   );
 }

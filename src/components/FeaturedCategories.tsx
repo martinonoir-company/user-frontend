@@ -3,36 +3,78 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useInView } from "@/hooks/useInView";
+import { api, Category } from "@/lib/api";
 
-const categories = [
+interface DisplayCategory {
+  title: string;
+  alias?: string;
+  description: string;
+  href: string;
+  image: string;
+}
+
+/** Fallback when API is unavailable */
+const FALLBACK_CATEGORIES: DisplayCategory[] = [
   {
-    title: "Bags",
-    description: "Hand-stitched leather, timeless silhouettes",
-    href: "/category/bags",
+    title: "Crossbody Bags",
+    alias: "Sling Bags",
+    description: "Compact carry, hands-free convenience",
+    href: "/category/crossbody-bags",
     image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&h=1000&fit=crop&q=80",
-    count: "48 pieces",
   },
   {
-    title: "Clothing",
-    description: "Tailored essentials, refined fabrics",
-    href: "/category/clothing",
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=1000&fit=crop&q=80",
-    count: "72 pieces",
+    title: "Backpack Bags",
+    alias: "Laptop Bags",
+    description: "Structured carry for work & travel",
+    href: "/category/backpack-bags",
+    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=1000&fit=crop&q=80",
   },
   {
-    title: "Accessories",
-    description: "Finishing touches that speak volumes",
-    href: "/category/accessories",
-    image: "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=800&h=1000&fit=crop&q=80",
-    count: "36 pieces",
+    title: "Messenger Bags",
+    alias: "Office Bags",
+    description: "Classic silhouettes for the modern workspace",
+    href: "/category/messenger-bags",
+    image: "https://images.unsplash.com/photo-1622560480605-d83c853bc5c5?w=800&h=1000&fit=crop&q=80",
+  },
+  {
+    title: "Travel Bags",
+    alias: "Duffel Bags",
+    description: "Built for adventure, generous capacity",
+    href: "/category/travel-bags",
+    image: "https://images.unsplash.com/photo-1553531384-cc64ac80f931?w=800&h=1000&fit=crop&q=80",
   },
 ];
+
+function toDisplayCategory(cat: Category): DisplayCategory {
+  return {
+    title: cat.name,
+    alias: cat.alias ?? undefined,
+    description: cat.description ?? "",
+    href: `/category/${cat.slug}`,
+    image: cat.imageUrl ?? "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&h=1000&fit=crop&q=80",
+  };
+}
 
 export default function FeaturedCategories() {
   const ref = useRef<HTMLDivElement>(null);
   const isVisible = useInView(ref, { threshold: 0.1 });
+  const [categories, setCategories] = useState<DisplayCategory[]>(FALLBACK_CATEGORIES);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.getCategories()
+      .then((res) => {
+        if (!cancelled && res.data.length > 0) {
+          setCategories(res.data.map(toDisplayCategory));
+        }
+      })
+      .catch(() => {
+        // Keep fallback
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <section className="py-20 md:py-32 bg-surface-0" aria-label="Shop by Category">
@@ -64,14 +106,14 @@ export default function FeaturedCategories() {
           </Link>
         </div>
 
-        {/* Category grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        {/* Category grid — 2x2 for 4 bag categories */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           {categories.map((cat, i) => (
             <Link
               key={cat.title}
               href={cat.href}
-              id={`category-${cat.title.toLowerCase()}`}
-              className={`group relative aspect-[3/4] md:aspect-[3/4] rounded-lg overflow-hidden transition-all duration-[800ms] ease-enter ${
+              id={`category-${cat.title.toLowerCase().replace(/\s+/g, "-")}`}
+              className={`group relative aspect-[4/3] sm:aspect-[3/2] rounded-lg overflow-hidden transition-all duration-[800ms] ease-enter ${
                 isVisible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-12"
@@ -84,7 +126,7 @@ export default function FeaturedCategories() {
                 alt={cat.title}
                 fill
                 className="object-cover transition-transform duration-[600ms] ease-enter group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, 33vw"
+                sizes="(max-width: 640px) 100vw, 50vw"
                 quality={85}
               />
 
@@ -93,13 +135,15 @@ export default function FeaturedCategories() {
 
               {/* Content */}
               <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
-                <span className="text-accent-gold text-xs font-medium tracking-wider uppercase mb-1">
-                  {cat.count}
-                </span>
                 <h3 className="text-2xl md:text-3xl font-display font-bold text-white">
                   {cat.title}
                 </h3>
-                <p className="mt-1 text-sm text-white/60 max-w-[20ch]">
+                {cat.alias && (
+                  <span className="text-accent-gold text-xs font-medium tracking-wider uppercase mt-1">
+                    Also known as: {cat.alias}
+                  </span>
+                )}
+                <p className="mt-1 text-sm text-white/60 max-w-[30ch]">
                   {cat.description}
                 </p>
                 <div className="mt-4 flex items-center gap-2 text-white text-sm font-medium">

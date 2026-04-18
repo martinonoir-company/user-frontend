@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -10,25 +11,26 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Martinonoir — Luxury Bags, Clothing & Accessories",
+    default: "Martinonoir — Premium Leather Bags",
     template: "%s | Martinonoir",
   },
   description:
-    "Discover Martinonoir's curated collection of premium leather bags, designer clothing, and luxury accessories. Crafted with intention, delivered with care.",
+    "Discover Martinonoir's curated collection of premium leather bags — crossbody, backpacks, messenger bags, and travel duffels. Crafted with intention, delivered with care.",
   keywords: [
-    "luxury bags",
     "leather bags",
-    "designer clothing",
-    "fashion accessories",
-    "premium fashion",
+    "crossbody bags",
+    "laptop bags",
+    "messenger bags",
+    "travel bags",
+    "premium bags",
     "Martinonoir",
   ],
   openGraph: {
     type: "website",
     siteName: "Martinonoir",
-    title: "Martinonoir — Luxury Bags, Clothing & Accessories",
+    title: "Martinonoir — Premium Leather Bags",
     description:
-      "Curated collection of premium leather bags, designer clothing, and luxury accessories.",
+      "Curated collection of premium leather crossbody, backpack, messenger, and travel bags.",
   },
   robots: {
     index: true,
@@ -43,7 +45,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="min-h-screen flex flex-col">{children}</body>
+      <body className="min-h-screen flex flex-col">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
+

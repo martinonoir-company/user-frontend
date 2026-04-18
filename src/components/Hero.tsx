@@ -76,8 +76,8 @@ export default function Hero() {
             }`}
             style={{ transitionDelay: "300ms", textShadow: "0 1px 10px rgba(0,0,0,0.4)" }}
           >
-            Premium leather bags, thoughtfully designed clothing, and accessories
-            that define modern luxury. Every piece tells a story.
+            Premium leather bags for every journey — crossbody, backpacks,
+            messengers, and travel duffels. Every piece tells a story.
           </p>
 
           {/* CTAs */}
