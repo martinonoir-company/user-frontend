@@ -271,6 +271,49 @@ class ApiClient {
     });
   }
 
+  // ── Cart (authenticated only) ──
+
+  async getCart() {
+    return this.request<{ data: ServerCartItem[] }>('/cart');
+  }
+
+  async getCartCount() {
+    return this.request<{ data: { count: number } }>('/cart/count');
+  }
+
+  async addToCart(variantId: string, quantity: number) {
+    return this.request<{ data: ServerCartItem }>('/cart', {
+      method: 'POST',
+      body: JSON.stringify({ variantId, quantity }),
+    });
+  }
+
+  async updateCartQuantity(variantId: string, quantity: number) {
+    return this.request<{ data: ServerCartItem | null }>(`/cart/${variantId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ quantity }),
+    });
+  }
+
+  async removeFromCart(variantId: string) {
+    return this.request<{ message: string }>(`/cart/${variantId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async clearCart() {
+    return this.request<{ message: string }>('/cart', {
+      method: 'DELETE',
+    });
+  }
+
+  async mergeCart(items: { variantId: string; quantity: number }[]) {
+    return this.request<{ data: ServerCartItem[] }>('/cart/merge', {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    });
+  }
+
   // ── Account ──
 
   async getProfile() {
@@ -475,6 +518,27 @@ export interface StockLevel {
   warehouseCode: string;
   onHand: number;
   reserved: number;
+}
+
+export interface ServerCartItem {
+  id: string;
+  variantId: string | null;
+  productId: string | null;
+  productName: string;
+  productSlug: string;
+  variantName: string | null;
+  sku: string;
+  quantity: number;
+  priceNgn: number;
+  priceUsd: number;
+  currentPriceNgn: number | null;
+  currentPriceUsd: number | null;
+  priceChanged: boolean;
+  unavailable: boolean;
+  options: Record<string, string> | null;
+  imageUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface WishlistItem {

@@ -2,14 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, AlertTriangle, TrendingUp } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/price";
 import { useState } from "react";
 import { api, QuoteResult } from "@/lib/api";
 
 export default function CartView() {
-  const { items, itemCount, updateQuantity, removeItem, clearCart, getSubtotal } = useCart();
+  const { items, itemCount, updateQuantity, removeItem, clearCart, getSubtotal, syncing } = useCart();
   const [quote, setQuote] = useState<QuoteResult | null>(null);
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [couponCode, setCouponCode] = useState("");
@@ -51,6 +51,8 @@ export default function CartView() {
   // Fetch quote when items change
   // Using subtotal as display fallback
   const subtotal = getSubtotal(currency);
+  const hasUnavailable = items.some((i) => i.unavailable);
+  const canCheckout = !hasUnavailable && !syncing && items.length > 0;
 
   if (items.length === 0) {
     return (
@@ -119,6 +121,25 @@ export default function CartView() {
                 </Link>
                 <p className="text-xs text-ink-500 mt-0.5">{item.variantName}</p>
                 <p className="text-xs text-ink-400 mt-0.5">SKU: {item.sku}</p>
+
+                {item.unavailable && (
+                  <p className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-red-600">
+                    <AlertTriangle size={12} />
+                    No longer available — remove to continue
+                  </p>
+                )}
+                {!item.unavailable && item.priceChanged && (
+                  <p className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-amber-600">
+                    <TrendingUp size={12} />
+                    Price updated to{" "}
+                    {formatPrice(
+                      (currency === "USD"
+                        ? item.currentPriceUsd
+                        : item.currentPriceNgn) ?? 0,
+                      currency,
+                    )}
+                  </p>
+                )}
 
                 <div className="flex items-center justify-between mt-3">
                   {/* Quantity */}
@@ -246,14 +267,33 @@ export default function CartView() {
               {loadingQuote ? "Calculating..." : "Update Quote"}
             </button>
 
-            <Link
-              href="/checkout"
-              id="checkout-btn"
-              className="w-full mt-3 flex items-center justify-center gap-2 py-3.5 bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm rounded-lg transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-            >
-              Proceed to Checkout
-              <ArrowRight size={16} />
-            </Link>
+            {hasUnavailable && (
+              <p className="mt-3 text-xs text-red-600 flex items-start gap-1.5">
+                <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                Remove unavailable items before proceeding to checkout.
+              </p>
+            )}
+
+            {canCheckout ? (
+              <Link
+                href="/checkout"
+                id="checkout-btn"
+                className="w-full mt-3 flex items-center justify-center gap-2 py-3.5 bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm rounded-lg transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+              >
+                Proceed to Checkout
+                <ArrowRight size={16} />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                className="w-full mt-3 flex items-center justify-center gap-2 py-3.5 bg-ink-200 text-ink-400 font-semibold text-sm rounded-lg cursor-not-allowed"
+              >
+                {syncing ? "Syncing…" : "Proceed to Checkout"}
+                <ArrowRight size={16} />
+              </button>
+            )}
 
             <Link
               href="/shop"
