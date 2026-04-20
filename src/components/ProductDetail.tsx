@@ -17,6 +17,7 @@ import {
   XCircle,
   Loader2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { api, Product, ProductVariant, StockLevel } from "@/lib/api";
 import { getVariantPrice, formatPrice } from "@/lib/price";
 import { useCart } from "@/lib/cart-context";
@@ -58,6 +59,7 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
 
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (initialProduct) return;
@@ -389,7 +391,13 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
             </button>
             <button
               onClick={async () => {
-                if (!product || !isAuthenticated) return;
+                if (!product) return;
+                if (!isAuthenticated) {
+                  // Send guests to login, preserve their intent to return here.
+                  const next = encodeURIComponent(`/product/${product.slug}`);
+                  router.push(`/login?next=${next}`);
+                  return;
+                }
                 setWishlistLoading(true);
                 try {
                   if (isWishlisted) {
@@ -399,10 +407,14 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
                     await api.addToWishlist(product.id, selectedVariant?.id);
                     setIsWishlisted(true);
                   }
-                } catch {}
+                } catch (err) {
+                  // Surface the failure so the user isn't left wondering why
+                  // nothing happened.
+                  console.error('Wishlist toggle failed', err);
+                }
                 setWishlistLoading(false);
               }}
-              disabled={wishlistLoading}
+              disabled={wishlistLoading || !product}
               className={`w-12 h-12 flex items-center justify-center border rounded-lg transition-all ${
                 isWishlisted
                   ? "border-red-200 bg-red-50 text-red-500"
