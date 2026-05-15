@@ -175,7 +175,7 @@ export default function WishlistView() {
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-ink-900 text-white text-xs font-semibold rounded-lg hover:bg-ink-800 transition-colors"
                 >
                   <ShoppingBag size={12} />
-                  Add to Bag
+                  Add to Cart
                 </button>
                 <button
                   onClick={() => handleRemove(item.productId)}

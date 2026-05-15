@@ -236,7 +236,7 @@ export default function CheckoutView() {
               <div className="flex justify-between items-center mt-6">
                 <Link href="/cart" className="flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-ink-700 transition-colors">
                   <ArrowLeft size={16} />
-                  Back to Bag
+                  Back to Cart
                 </Link>
                 <button
                   type="submit"

@@ -313,9 +313,7 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
           </div>
 
           {/* Description */}
-          <p className="text-ink-600 leading-relaxed mb-8">
-            {product.description || product.shortDescription}
-          </p>
+          <ProductDescription text={product.description || product.shortDescription || ""} />
 
           {/* Variant selector */}
           {product.variants && product.variants.length > 1 && (
@@ -387,7 +385,7 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
               }`}
             >
               <ShoppingBag size={18} />
-              {outOfStock ? "Out of Stock" : addedFeedback ? "Added to Bag ✓" : "Add to Bag"}
+              {outOfStock ? "Out of Stock" : addedFeedback ? "Added to Cart ✓" : "Add to Cart"}
             </button>
             <button
               onClick={async () => {
@@ -446,6 +444,65 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Renders a free-form product description with reasonable typography:
+ *   • blank lines become paragraph breaks
+ *   • single newlines become <br/>
+ *   • lines beginning with `-`, `*`, `•` become bullet lists
+ *   • lines beginning with `1.`, `2.` etc. become ordered lists
+ *
+ * Treating the text as plain (not HTML) is intentional — admins type into a
+ * <textarea>, and rendering as HTML would let a hostile admin XSS the storefront.
+ */
+function ProductDescription({ text }: { text: string }) {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  // Split into blocks on blank lines.
+  const blocks = trimmed.split(/\n\s*\n/);
+
+  const isBullet = (l: string) => /^\s*[-*•]\s+/.test(l);
+  const isNumbered = (l: string) => /^\s*\d+[.)]\s+/.test(l);
+
+  return (
+    <div className="text-ink-600 leading-relaxed mb-8 space-y-4">
+      {blocks.map((block, bi) => {
+        const lines = block.split("\n").map((l) => l.trimEnd()).filter((l) => l.length > 0);
+        if (lines.length === 0) return null;
+
+        if (lines.every(isBullet)) {
+          return (
+            <ul key={bi} className="list-disc pl-5 space-y-1.5 marker:text-ink-400">
+              {lines.map((l, li) => (
+                <li key={li}>{l.replace(/^\s*[-*•]\s+/, "")}</li>
+              ))}
+            </ul>
+          );
+        }
+        if (lines.every(isNumbered)) {
+          return (
+            <ol key={bi} className="list-decimal pl-5 space-y-1.5 marker:text-ink-400">
+              {lines.map((l, li) => (
+                <li key={li}>{l.replace(/^\s*\d+[.)]\s+/, "")}</li>
+              ))}
+            </ol>
+          );
+        }
+        return (
+          <p key={bi}>
+            {lines.map((l, li) => (
+              <span key={li}>
+                {l}
+                {li < lines.length - 1 && <br />}
+              </span>
+            ))}
+          </p>
+        );
+      })}
     </div>
   );
 }

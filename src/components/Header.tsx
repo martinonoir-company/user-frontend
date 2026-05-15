@@ -140,7 +140,7 @@ export default function Header() {
                   ? "text-ink-500 hover:text-ink-900 hover:bg-surface-1"
                   : "text-white/80 hover:text-white hover:bg-white/10"
               }`}
-              aria-label={`Shopping bag (${itemCount} items)`}
+              aria-label={`Shopping cart (${itemCount} items)`}
             >
               <ShoppingBag size={20} />
               {itemCount > 0 && (

@@ -148,6 +148,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     // Wait for auth to hydrate before we do anything.
     if (authLoading) return;
 
+    // Don't re-run the mode-load if we've already loaded for the current
+    // mode. Without this guard, any second invocation of the effect (e.g.
+    // React strict-mode double-effect in dev, or any subtle dep-identity
+    // churn) would call `setItems(loadGuestCart())` again and wipe an
+    // in-progress optimistic add — exactly the "added item disappears
+    // after a split second" symptom.
+    const desiredMode: 'guest' | 'auth' = isAuthenticated ? 'auth' : 'guest';
+    if (modeLoadedRef.current === desiredMode) return;
+
     let cancelled = false;
 
     const loadAuthCart = async () => {
@@ -191,9 +200,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     if (isAuthenticated) {
+      // Reset modeLoadedRef when moving guest→auth so loadAuthCart runs.
+      modeLoadedRef.current = null;
       void loadAuthCart();
     } else {
-      // Logged out → reload from localStorage, reset merge tracking.
+      // First time entering guest mode for this session — seed items
+      // from localStorage. Subsequent mutations update items + localStorage
+      // through the persist effect; this branch never runs again unless
+      // the user logs out (which resets the ref via the auth → guest
+      // transition tracking below).
       mergedForSessionRef.current = false;
       setItems(loadGuestCart());
       modeLoadedRef.current = 'guest';
@@ -202,6 +217,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
+  }, [isAuthenticated, authLoading]);
+
+  // Track auth↔guest transitions so the mode-load can rerun when it
+  // SHOULD (login or logout) but skip when it shouldn't (re-renders).
+  const prevAuthRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (authLoading) return;
+    if (prevAuthRef.current !== null && prevAuthRef.current !== isAuthenticated) {
+      // Auth state genuinely flipped — clear the mode marker so the
+      // mode-load effect above runs again with the new mode.
+      modeLoadedRef.current = null;
+    }
+    prevAuthRef.current = isAuthenticated;
   }, [isAuthenticated, authLoading]);
 
   // Persist guest cart on change. Only runs in guest mode.

@@ -59,7 +59,7 @@ export default function CartView() {
       <div className="content-grid py-20 text-center">
         <ShoppingBag size={64} className="mx-auto text-ink-200 mb-6" />
         <h1 className="text-2xl font-display font-bold text-ink-900 mb-2">
-          Your Bag is Empty
+          Your Cart is Empty
         </h1>
         <p className="text-ink-500 mb-8">
           Looks like you haven&apos;t added anything yet.
@@ -77,7 +77,7 @@ export default function CartView() {
   return (
     <div className="content-grid py-8 md:py-12">
       <h1 className="text-2xl md:text-3xl font-display font-bold text-ink-900 mb-8">
-        Shopping Bag
+        Shopping Cart
         <span className="text-base font-normal text-ink-400 ml-2">
           ({itemCount} {itemCount === 1 ? "item" : "items"})
         </span>
@@ -190,7 +190,7 @@ export default function CartView() {
               onClick={clearCart}
               className="text-sm text-ink-400 hover:text-red-500 transition-colors"
             >
-              Clear entire bag
+              Clear entire cart
             </button>
           </div>
         </div>

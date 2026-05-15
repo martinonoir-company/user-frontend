@@ -3,8 +3,8 @@ import PageLayout from "@/components/PageLayout";
 import CartView from "@/components/CartView";
 
 export const metadata: Metadata = {
-  title: "Shopping Bag",
-  description: "Review the items in your Martinonoir shopping bag.",
+  title: "Shopping Cart",
+  description: "Review the items in your Martinonoir shopping cart.",
 };
 
 export default function CartPage() {
