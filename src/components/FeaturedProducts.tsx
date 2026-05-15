@@ -16,7 +16,8 @@ interface DisplayProduct {
   category: string;
   price: string;
   priceUsdDisplay: string;
-  image: string;
+  /** May be empty when the admin has uploaded no media yet. */
+  image: string | null;
   badge: string | null;
   rating: number;
   reviews: number;
@@ -29,30 +30,6 @@ interface DisplayProduct {
   };
 }
 
-/** Hardcoded fallback for when API is unavailable */
-const FALLBACK_PRODUCTS: DisplayProduct[] = [
-  {
-    id: "1", name: "Heritage Tote", slug: "heritage-tote", category: "Bags",
-    price: "₦185,000", priceUsdDisplay: "$120",
-    image: "/images/product-bag-black.png", badge: "Best Seller", rating: 4.9, reviews: 128,
-  },
-  {
-    id: "2", name: "Milano Crossbody", slug: "milano-crossbody", category: "Bags",
-    price: "₦145,000", priceUsdDisplay: "$95",
-    image: "/images/product-bag-cognac.png", badge: "New", rating: 4.8, reviews: 64,
-  },
-  {
-    id: "3", name: "Noir Blazer", slug: "noir-blazer", category: "Clothing",
-    price: "₦225,000", priceUsdDisplay: "$148",
-    image: "/images/product-clothing.png", badge: null, rating: 4.7, reviews: 42,
-  },
-  {
-    id: "4", name: "Executive Wallet", slug: "executive-wallet", category: "Accessories",
-    price: "₦65,000", priceUsdDisplay: "$42",
-    image: "/images/product-accessory.png", badge: null, rating: 4.9, reviews: 89,
-  },
-];
-
 function toDisplayProduct(p: Product): DisplayProduct {
   const firstVariant = p.variants?.[0];
   const firstMedia = p.media?.[0];
@@ -63,7 +40,7 @@ function toDisplayProduct(p: Product): DisplayProduct {
     category: p.category?.name ?? "Bags",
     price: firstVariant ? getVariantPrice(firstVariant, "NGN") : "—",
     priceUsdDisplay: firstVariant ? getVariantPrice(firstVariant, "USD") : "—",
-    image: firstMedia?.url ?? "/images/product-bag-black.png",
+    image: firstMedia?.url ?? null,
     badge: p.isFeatured ? "Featured" : null,
     rating: 4.8,
     reviews: 0,
@@ -82,22 +59,33 @@ function toDisplayProduct(p: Product): DisplayProduct {
 export default function FeaturedProducts() {
   const ref = useRef<HTMLDivElement>(null);
   const isVisible = useInView(ref, { threshold: 0.05 });
-  const [products, setProducts] = useState<DisplayProduct[]>(FALLBACK_PRODUCTS);
+  // Start empty so the section never shows hardcoded products. A skeleton
+  // bridges the gap until the API responds.
+  const [products, setProducts] = useState<DisplayProduct[]>([]);
+  const [loading, setLoading] = useState(true);
   const { addItem } = useCart();
 
   useEffect(() => {
     let cancelled = false;
     api.getProducts({ limit: 4, featured: true })
       .then((res) => {
-        if (!cancelled && res.data.items.length > 0) {
-          setProducts(res.data.items.map(toDisplayProduct));
-        }
+        if (cancelled) return;
+        setProducts(res.data.items.map(toDisplayProduct));
       })
       .catch(() => {
-        // Keep fallback products on error
+        if (cancelled) return;
+        setProducts([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
   }, []);
+
+  // If the admin hasn't flagged any products as featured, render nothing
+  // instead of a misleading empty grid. The fall-back marketing UX is the
+  // rest of the page (Hero, Categories, etc.).
+  if (!loading && products.length === 0) return null;
 
   const handleQuickAdd = (e: React.MouseEvent, product: DisplayProduct) => {
     e.preventDefault();
@@ -112,7 +100,7 @@ export default function FeaturedProducts() {
         priceNgn: product.variant.priceNgn,
         priceUsd: product.variant.priceUsd,
         options: {},
-        imageUrl: product.image,
+        imageUrl: product.image ?? undefined,
       });
     }
   };
@@ -141,7 +129,16 @@ export default function FeaturedProducts() {
 
         {/* Product grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {products.map((product, i) => (
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={`skeleton-${i}`} className="animate-pulse">
+                  <div className="aspect-[3/4] rounded-lg bg-surface-2 mb-3" />
+                  <div className="h-3 w-1/3 bg-surface-2 rounded mb-2" />
+                  <div className="h-4 w-3/4 bg-surface-2 rounded mb-2" />
+                  <div className="h-4 w-1/2 bg-surface-2 rounded" />
+                </div>
+              ))
+            : products.map((product, i) => (
             <div
               key={product.id}
               className={`group transition-all duration-[800ms] ease-enter ${
@@ -158,14 +155,20 @@ export default function FeaturedProducts() {
               >
                 {/* Image container */}
                 <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-surface-2 mb-3">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-cover transition-transform duration-[600ms] ease-enter group-hover:scale-105"
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    quality={85}
-                  />
+                  {product.image ? (
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover transition-transform duration-[600ms] ease-enter group-hover:scale-105"
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      quality={85}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-ink-300">
+                      <ShoppingBag size={40} />
+                    </div>
+                  )}
 
                   {/* Badge */}
                   {product.badge && (
@@ -210,7 +213,7 @@ export default function FeaturedProducts() {
                   <h3 className="text-sm md:text-base font-semibold text-ink-900 group-hover:text-primary-700 transition-colors duration-micro">
                     {product.name}
                   </h3>
-                  {product.rating > 0 && (
+                  {product.reviews > 0 && (
                     <div className="flex items-center gap-1.5">
                       <div className="flex items-center gap-0.5">
                         <Star size={12} className="fill-accent-gold text-accent-gold" />
