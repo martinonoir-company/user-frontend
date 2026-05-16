@@ -112,61 +112,63 @@ export default function FeaturedCategories() {
                   key={cat.title}
                   href={cat.href}
                   id={`category-${cat.title.toLowerCase().replace(/\s+/g, "-")}`}
-                  className={`group relative aspect-[3/4] rounded-xl overflow-hidden bg-ink-900 ring-1 ring-ink-900/5 shadow-sm hover:shadow-xl hover:shadow-ink-900/15 transition-[transform,box-shadow,opacity] duration-[700ms] ease-enter will-change-transform hover:-translate-y-1 ${
+                  className={`group relative flex flex-col aspect-[3/4] rounded-xl overflow-hidden bg-ink-900 shadow-sm hover:shadow-xl hover:shadow-ink-900/15 outline-none focus-visible:ring-2 focus-visible:ring-accent-gold/70 transition-[transform,box-shadow,opacity] duration-[700ms] ease-enter will-change-transform hover:-translate-y-1 ${
                     gridInView
                       ? "opacity-100 translate-y-0 scale-100"
                       : "opacity-0 translate-y-10 scale-[0.96]"
                   }`}
                   style={{ transitionDelay: `${gridInView ? i * STAGGER_MS : 0}ms` }}
                 >
-                  {/* Image — gently zooms from 110% to 100% as the card settles in */}
-                  <div className="absolute inset-0 overflow-hidden">
-                    {cat.image ? (
-                      <Image
-                        src={cat.image}
-                        alt={cat.title}
-                        fill
-                        className={`object-cover transition-transform ease-enter duration-[1100ms] group-hover:scale-110 ${
-                          gridInView ? "scale-100" : "scale-110"
-                        }`}
-                        sizes="(max-width: 1024px) 50vw, 25vw"
-                        quality={85}
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-ink-800 text-ink-600">
-                        <ShoppingBag size={44} />
+                  {/* Image area — light backdrop with slight inner padding.
+                      The image is `object-contain` inside a padded inset box,
+                      so it's fully visible, never cropped, never distorted —
+                      whatever aspect ratio the admin uploaded. */}
+                  <div className="relative basis-[62%] grow-0 shrink-0 bg-surface-1">
+                    <div className="absolute inset-0 px-3 pt-3 pb-2">
+                      <div className="relative w-full h-full overflow-hidden">
+                        {cat.image ? (
+                          <Image
+                            src={cat.image}
+                            alt={cat.title}
+                            fill
+                            className={`object-contain transition-transform ease-enter duration-[900ms] group-hover:scale-[1.04] ${
+                              gridInView ? "scale-100" : "scale-105"
+                            }`}
+                            sizes="(max-width: 1024px) 50vw, 25vw"
+                            quality={85}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-ink-300">
+                            <ShoppingBag size={44} />
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  {/* Overlay gradient — darkens slightly on hover for legibility */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/25 to-transparent transition-opacity duration-standard group-hover:from-ink-900/90" />
-
-                  {/* Hairline gold border that fades in on hover */}
-                  <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-accent-gold/0 group-hover:ring-accent-gold/40 transition-all duration-standard" />
-
-                  {/* Content */}
-                  <div className="absolute inset-0 flex flex-col justify-end p-4 md:p-5">
+                  {/* Text panel — solid dark background; light text gives a
+                      strong contrast ratio so every line stays fully legible. */}
+                  <div className="relative basis-[38%] grow shrink-0 flex flex-col justify-center bg-ink-900 px-4 py-3 border-t border-white/5">
                     {cat.alias && (
-                      <span className="text-accent-gold text-[10px] font-semibold tracking-[0.15em] uppercase mb-1">
+                      <span className="text-accent-gold text-[10px] font-semibold tracking-[0.15em] uppercase mb-0.5">
                         {cat.alias}
                       </span>
                     )}
-                    <h3 className="text-lg md:text-xl font-display font-bold text-white leading-tight">
+                    <h3 className="text-base md:text-lg font-display font-bold text-white leading-tight">
                       {cat.title}
                     </h3>
                     {cat.description && (
-                      <p className="mt-1 text-xs text-white/55 line-clamp-2 max-h-0 opacity-0 group-hover:max-h-12 group-hover:opacity-100 transition-all duration-standard ease-enter overflow-hidden">
+                      <p className="mt-1 text-xs text-white/65 line-clamp-2">
                         {cat.description}
                       </p>
                     )}
-                    <div className="mt-3 flex items-center gap-1.5 text-white text-xs font-semibold">
+                    <div className="mt-2 flex items-center gap-1.5 text-white/90 text-xs font-semibold">
                       <span className="transition-transform duration-standard group-hover:translate-x-0.5">
                         Shop Now
                       </span>
                       <ArrowUpRight
                         size={14}
-                        className="text-accent-gold transition-all duration-standard opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        className="text-accent-gold transition-all duration-standard opacity-80 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                       />
                     </div>
                   </div>
