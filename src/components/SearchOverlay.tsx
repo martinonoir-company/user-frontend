@@ -186,7 +186,7 @@ export default function SearchOverlay({ isOpen, onClose }: Props) {
                 Popular Searches
               </p>
               <div className="flex flex-wrap gap-2">
-                {["Leather Tote", "Blazer", "Wallet", "Backpack", "Scarf", "Belt"].map((term) => (
+                {["Leather Tote", "Milano Holdall", "Wallet", "Backpack", "Heritage Satchel", "Onyx Weekender"].map((term) => (
                   <button
                     key={term}
                     onClick={() => setQuery(term)}

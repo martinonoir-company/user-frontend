@@ -1,12 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   ChevronRight,
-  MapPin,
-  Clock,
   Briefcase,
   Zap,
   Globe,
@@ -27,52 +25,6 @@ const perks = [
   { icon: Briefcase, title: "Staff Wardrobe", description: "Generous annual Martinonoir wardrobe credit for all team members." },
 ];
 
-const openings = [
-  {
-    title: "Senior Frontend Engineer",
-    department: "Engineering",
-    location: "Lagos / Remote",
-    type: "Full-time",
-    description: "Build world-class commerce experiences with Next.js, TypeScript, and Tailwind. You'll own the user-facing storefront and help define our frontend architecture.",
-  },
-  {
-    title: "Product Designer",
-    department: "Design",
-    location: "Lagos",
-    type: "Full-time",
-    description: "Lead the design of our digital and physical brand experiences. You'll work closely with engineering and brand to craft beautiful, functional interfaces.",
-  },
-  {
-    title: "Operations Manager",
-    department: "Operations",
-    location: "Lagos",
-    type: "Full-time",
-    description: "Oversee our supply chain, logistics, and fulfilment operations as we scale across Africa and beyond.",
-  },
-  {
-    title: "Brand & Content Lead",
-    department: "Marketing",
-    location: "Lagos / Remote",
-    type: "Full-time",
-    description: "Own the Martinonoir brand voice across all channels — social, email, editorial, and beyond.",
-  },
-  {
-    title: "Leather Goods Artisan",
-    department: "Production",
-    location: "Lagos",
-    type: "Full-time",
-    description: "Join our in-house workshop team. You have at least 3 years of leather crafting experience and take immense pride in your work.",
-  },
-];
-
-const deptColors: Record<string, string> = {
-  Engineering: "bg-primary-100 text-primary-700",
-  Design: "bg-accent-gold-light text-accent-gold-dark",
-  Operations: "bg-surface-2 text-ink-600",
-  Marketing: "bg-success-light text-success",
-  Production: "bg-warning-light text-warning",
-};
-
 export default function CareersPage() {
   const perksRef = useRef<HTMLDivElement>(null);
   const rolesRef = useRef<HTMLDivElement>(null);
@@ -81,10 +33,6 @@ export default function CareersPage() {
   const perksVisible = useInView(perksRef, { threshold: 0.08 });
   const rolesVisible = useInView(rolesRef, { threshold: 0.05 });
   const ctaVisible = useInView(ctaRef, { threshold: 0.1 });
-
-  const [filter, setFilter] = useState("All");
-  const departments = ["All", ...Array.from(new Set(openings.map((o) => o.department)))];
-  const filtered = filter === "All" ? openings : openings.filter((o) => o.department === filter);
 
   return (
     <>
@@ -103,7 +51,7 @@ export default function CareersPage() {
             </nav>
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-900/40 border border-primary-500/25 text-white/80 text-xs font-medium tracking-wide uppercase mb-6">
               <span className="w-1.5 h-1.5 bg-primary-400 rounded-full animate-pulse" />
-              We&apos;re Hiring
+              Careers at Martinonoir
             </span>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold text-white leading-[1.05] text-balance max-w-3xl mx-auto">
               Build the future of{" "}
@@ -114,7 +62,6 @@ export default function CareersPage() {
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-8 text-sm text-white/35">
               {[
-                { label: "Open Roles", value: `${openings.length}` },
                 { label: "Team Size", value: "40+" },
                 { label: "Countries", value: "3" },
               ].map((s) => (
@@ -168,69 +115,39 @@ export default function CareersPage() {
           <div className="content-grid">
             <div
               ref={rolesRef}
-              className={`flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12 transition-all duration-[800ms] ease-enter ${
+              className={`text-center mb-12 transition-all duration-[800ms] ease-enter ${
                 rolesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
             >
-              <div>
-                <span className="text-primary-700 text-xs font-semibold tracking-widest uppercase">Open Positions</span>
-                <h2 className="mt-3 text-3xl md:text-4xl font-display font-bold text-ink-900">Current Openings</h2>
-              </div>
-              {/* department filter */}
-              <div className="flex flex-wrap gap-2">
-                {departments.map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setFilter(d)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-micro ${
-                      filter === d
-                        ? "bg-primary-700 text-white shadow-sm"
-                        : "bg-surface-0 text-ink-500 border border-rule/60 hover:border-primary-300 hover:text-primary-700"
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
+              <span className="text-primary-700 text-xs font-semibold tracking-widest uppercase">Open Positions</span>
+              <h2 className="mt-3 text-3xl md:text-4xl font-display font-bold text-ink-900">Current Openings</h2>
             </div>
 
-            <div className="space-y-4">
-              {filtered.map((role, i) => (
-                <div
-                  key={role.title}
-                  className={`group bg-surface-0 rounded-xl border border-rule/50 p-6 md:p-8 hover:border-primary-300/60 hover:shadow-md transition-all duration-standard ${
-                    rolesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                  }`}
-                  style={{ transitionDelay: `${i * 60}ms`, transitionDuration: "700ms" }}
-                >
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${deptColors[role.department] ?? "bg-surface-2 text-ink-500"}`}>
-                          {role.department}
-                        </span>
-                        <span className="flex items-center gap-1 text-xs text-ink-400">
-                          <MapPin size={11} /> {role.location}
-                        </span>
-                        <span className="flex items-center gap-1 text-xs text-ink-400">
-                          <Clock size={11} /> {role.type}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-semibold text-ink-900 group-hover:text-primary-700 transition-colors duration-micro mb-2">
-                        {role.title}
-                      </h3>
-                      <p className="text-sm text-ink-500 leading-relaxed max-w-2xl">{role.description}</p>
-                    </div>
-                    <Link
-                      href={`mailto:careers@martinonoir.com?subject=Application: ${encodeURIComponent(role.title)}`}
-                      className="group/btn shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-primary-700 hover:bg-primary-800 text-white text-sm font-semibold rounded-lg transition-all duration-standard hover:shadow-md self-start"
-                    >
-                      Apply Now
-                      <ArrowRight size={13} className="transition-transform duration-standard group-hover/btn:translate-x-1" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
+            {/* No openings — empty state */}
+            <div
+              className={`max-w-xl mx-auto text-center bg-surface-0 rounded-2xl border border-rule/50 px-8 py-14 transition-all duration-[800ms] ease-enter ${
+                rolesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
+              style={{ transitionDelay: "120ms" }}
+            >
+              <div className="w-14 h-14 mx-auto flex items-center justify-center rounded-2xl bg-primary-100 mb-5">
+                <Briefcase size={24} className="text-primary-700" />
+              </div>
+              <h3 className="text-xl font-display font-bold text-ink-900">
+                No open positions right now
+              </h3>
+              <p className="mt-3 text-sm text-ink-500 leading-relaxed">
+                We don&apos;t have any vacancies at the moment. Please check back
+                later — new opportunities are posted here as they open. In the
+                meantime, you&apos;re welcome to send us an open application below.
+              </p>
+              <a
+                href="mailto:careers@martinonoir.com?subject=Open Application"
+                className="group mt-7 inline-flex items-center gap-2 px-6 py-3 bg-primary-700 hover:bg-primary-800 text-white text-sm font-semibold rounded-lg transition-all duration-standard hover:shadow-md"
+              >
+                Send Open Application
+                <ArrowRight size={13} className="transition-transform duration-standard group-hover:translate-x-1" />
+              </a>
             </div>
           </div>
         </section>
