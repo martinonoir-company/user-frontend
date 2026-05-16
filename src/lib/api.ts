@@ -229,6 +229,18 @@ class ApiClient {
     return this.request<{ data: Category[] }>('/categories');
   }
 
+  async getCategoriesPaginated(page = 1, limit = 12) {
+    return this.request<{
+      data: {
+        items: Category[];
+        total: number;
+        page: number;
+        limit: number;
+        pages: number;
+      };
+    }>(`/categories/paginated?page=${page}&limit=${limit}`);
+  }
+
   async getCategoryTree() {
     return this.request<{ data: Category[] }>('/categories/tree');
   }

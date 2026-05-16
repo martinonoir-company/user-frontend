@@ -35,12 +35,11 @@ function FacebookIcon({ size = 16 }: { size?: number }) {
 
 const footerLinks = {
   Shop: [
-    { label: "New Arrivals", href: "/new-arrivals" },
     { label: "Crossbody Bags", href: "/category/crossbody-bags" },
     { label: "Backpack Bags", href: "/category/backpack-bags" },
     { label: "Messenger Bags", href: "/category/messenger-bags" },
     { label: "Travel Bags", href: "/category/travel-bags" },
-    { label: "All Bags", href: "/shop" },
+    { label: "All Bags", href: "/categories" },
   ],
   Company: [
     { label: "About Us", href: "/about" },

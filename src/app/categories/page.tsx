@@ -3,8 +3,8 @@ import PageLayout from "@/components/PageLayout";
 import CategoriesGrid from "@/components/CategoriesGrid";
 
 export const metadata: Metadata = {
-  title: "Shop by Category",
-  description: "Browse Martinonoir's bag collections — Crossbody, Backpacks, Messenger, and Travel bags.",
+  title: "All Categories",
+  description: "Browse every Martinonoir collection — Crossbody, Backpacks, Messenger, Travel bags and more.",
 };
 
 export default function CategoriesPage() {

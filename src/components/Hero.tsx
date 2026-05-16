@@ -90,7 +90,7 @@ export default function Hero() {
             style={{ transitionDelay: "450ms" }}
           >
             <Link
-              href="/new-arrivals"
+              href="/shop"
               id="hero-cta-primary"
               className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm tracking-wide rounded-md transition-all duration-standard hover:shadow-lg hover:shadow-primary-900/30 hover:-translate-y-0.5 active:translate-y-0"
             >
@@ -101,7 +101,7 @@ export default function Hero() {
               />
             </Link>
             <Link
-              href="/category/bags"
+              href="/categories"
               id="hero-cta-secondary"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white font-medium text-sm tracking-wide rounded-md border border-white/20 transition-all duration-standard hover:-translate-y-0.5 active:translate-y-0"
             >
