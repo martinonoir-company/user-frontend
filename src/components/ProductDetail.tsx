@@ -38,12 +38,22 @@ type StockState =
   | { status: "low_stock"; available: number }
   | { status: "out_of_stock" };
 
+/**
+ * Pick the variant to select by default. Always prefer an active variant —
+ * an inactive one can't be added to cart (the server rejects it), so it must
+ * never be the default selection.
+ */
+function pickDefaultVariant(p: Product | null | undefined): ProductVariant | null {
+  const variants = p?.variants ?? [];
+  return variants.find((v) => v.isActive) ?? variants[0] ?? null;
+}
+
 export default function ProductDetail({ slug, initialProduct }: Props) {
   const [product, setProduct] = useState<Product | null>(initialProduct ?? null);
   const [loading, setLoading] = useState(!initialProduct);
   const [error, setError] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-    initialProduct?.variants?.[0] ?? null,
+    pickDefaultVariant(initialProduct),
   );
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -71,7 +81,7 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
       .then((res) => {
         if (!cancelled) {
           setProduct(res.data);
-          setSelectedVariant(res.data.variants?.[0] ?? null);
+          setSelectedVariant(pickDefaultVariant(res.data));
         }
       })
       .catch(() => {
@@ -316,29 +326,39 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
           <ProductDescription text={product.description || product.shortDescription || ""} />
 
           {/* Variant selector */}
-          {product.variants && product.variants.length > 1 && (
-            <div className="mb-6">
-              <label className="text-sm font-medium text-ink-700 mb-2 block">Variant</label>
-              <div className="flex flex-wrap gap-2">
-                {product.variants.map((v) => (
-                  <button
-                    key={v.id}
-                    onClick={() => {
-                      setSelectedVariant(v);
-                      setQuantity(1);
-                    }}
-                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                      selectedVariant?.id === v.id
-                        ? "border-primary-700 bg-primary-50 text-primary-700"
-                        : "border-ink-200 text-ink-700 hover:border-ink-300"
-                    }`}
-                  >
-                    {v.name}
-                  </button>
-                ))}
+          {(() => {
+            // Only active variants are selectable — an inactive one can't be
+            // added to cart. The server already filters these out of the
+            // storefront payload; this is defence-in-depth against a stale
+            // cache or older cached data.
+            const selectableVariants = (product.variants ?? []).filter(
+              (v) => v.isActive,
+            );
+            if (selectableVariants.length <= 1) return null;
+            return (
+              <div className="mb-6">
+                <label className="text-sm font-medium text-ink-700 mb-2 block">Variant</label>
+                <div className="flex flex-wrap gap-2">
+                  {selectableVariants.map((v) => (
+                    <button
+                      key={v.id}
+                      onClick={() => {
+                        setSelectedVariant(v);
+                        setQuantity(1);
+                      }}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                        selectedVariant?.id === v.id
+                          ? "border-primary-700 bg-primary-50 text-primary-700"
+                          : "border-ink-200 text-ink-700 hover:border-ink-300"
+                      }`}
+                    >
+                      {v.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Quantity */}
           <div className="mb-6">

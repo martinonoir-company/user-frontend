@@ -301,14 +301,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
             setItems(res.data.map(fromServer));
           })
           .catch(() => {
-            // Roll back by re-fetching truth. Guest mode can't rollback
-            // because there is no server truth.
-            return api
-              .getCart()
-              .then((res) => setItems(res.data.map(fromServer)))
-              .catch(() => {
-                /* leave optimistic state in place if server is unreachable */
-              });
+            // The server rejected THIS item (e.g. the variant is inactive).
+            // Roll back only the failed variant — do NOT re-fetch the whole
+            // cart, which would blow away other items the user already has.
+            setItems((prev) =>
+              prev.filter((i) => i.variantId !== item.variantId),
+            );
           })
           .finally(() => setSyncing(false));
       }
