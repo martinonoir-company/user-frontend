@@ -140,22 +140,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Tracks whether we've already merged the guest cart into the server cart
   // for the current auth session, so we don't merge repeatedly on re-render.
   const mergedForSessionRef = useRef(false);
-  // Tracks whether we've done the initial load for the current mode.
-  const modeLoadedRef = useRef<'guest' | 'auth' | null>(null);
+  // The mode whose load has been STARTED (not necessarily finished). This is
+  // set synchronously at the top of the effect, before any `await`, so a
+  // re-render that happens *during* an in-flight load (e.g. a `setSyncing`
+  // from a background `addItem`) is correctly skipped by the guard instead
+  // of kicking off a second load that re-fetches stale server state and
+  // wipes the just-added item.
+  const loadStartedForRef = useRef<'guest' | 'auth' | null>(null);
 
   // ── Mode transitions: guest <-> auth ──
   useEffect(() => {
     // Wait for auth to hydrate before we do anything.
     if (authLoading) return;
 
-    // Don't re-run the mode-load if we've already loaded for the current
-    // mode. Without this guard, any second invocation of the effect (e.g.
-    // React strict-mode double-effect in dev, or any subtle dep-identity
-    // churn) would call `setItems(loadGuestCart())` again and wipe an
-    // in-progress optimistic add — exactly the "added item disappears
-    // after a split second" symptom.
     const desiredMode: 'guest' | 'auth' = isAuthenticated ? 'auth' : 'guest';
-    if (modeLoadedRef.current === desiredMode) return;
+
+    // Idempotency guard. If we've already STARTED loading for the current
+    // mode, do nothing — even if that load is still in flight. Critically,
+    // this ref is set BEFORE the async work below, so it closes the race
+    // window where an in-progress optimistic add could be overwritten by a
+    // second mode-load. The ref is only cleared on a genuine auth flip
+    // (see the transition-tracking effect below).
+    if (loadStartedForRef.current === desiredMode) return;
+    loadStartedForRef.current = desiredMode;
 
     let cancelled = false;
 
@@ -175,7 +182,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
               if (cancelled) return;
               setItems(merged.data.map(fromServer));
               clearGuestCart();
-              modeLoadedRef.current = 'auth';
               return;
             } catch {
               // Merge failed — fall through to plain fetch so we don't wipe
@@ -190,7 +196,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const res = await api.getCart();
         if (cancelled) return;
         setItems(res.data.map(fromServer));
-        modeLoadedRef.current = 'auth';
       } catch {
         if (cancelled) return;
         setItems([]);
@@ -200,8 +205,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     if (isAuthenticated) {
-      // Reset modeLoadedRef when moving guest→auth so loadAuthCart runs.
-      modeLoadedRef.current = null;
       void loadAuthCart();
     } else {
       // First time entering guest mode for this session — seed items
@@ -211,7 +214,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // transition tracking below).
       mergedForSessionRef.current = false;
       setItems(loadGuestCart());
-      modeLoadedRef.current = 'guest';
     }
 
     return () => {
@@ -225,18 +227,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (authLoading) return;
     if (prevAuthRef.current !== null && prevAuthRef.current !== isAuthenticated) {
-      // Auth state genuinely flipped — clear the mode marker so the
-      // mode-load effect above runs again with the new mode.
-      modeLoadedRef.current = null;
+      // Auth state genuinely flipped — clear the marker so the mode-load
+      // effect above runs again with the new mode. This is the ONLY place
+      // the marker is cleared, so a plain re-render can never re-trigger a
+      // mode-load.
+      loadStartedForRef.current = null;
     }
     prevAuthRef.current = isAuthenticated;
   }, [isAuthenticated, authLoading]);
 
-  // Persist guest cart on change. Only runs in guest mode.
+  // Persist guest cart on change. Only runs in guest mode, and only once
+  // the guest mode-load has run — otherwise the very first render (items
+  // still []) would clear a cart we haven't loaded yet.
   useEffect(() => {
     if (authLoading) return;
     if (isAuthenticated) return;
-    if (modeLoadedRef.current !== 'guest') return;
+    if (loadStartedForRef.current !== 'guest') return;
     if (items.length === 0) {
       clearGuestCart();
     } else {
