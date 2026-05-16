@@ -33,6 +33,7 @@ export default function CartView() {
         country: "NG",
         state: "Lagos",
         couponCode: coupon || undefined,
+        channel: "STOREFRONT",
       });
       setQuote(res.data);
     } catch {

@@ -76,6 +76,7 @@ export default function CheckoutView() {
         currency: cur,
         country,
         state,
+        channel: "STOREFRONT",
       });
 
       setQuote(res.data);
