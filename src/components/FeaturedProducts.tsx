@@ -192,13 +192,16 @@ export default function FeaturedProducts() {
                     >
                       <Heart size={14} className="text-ink-600" />
                     </button>
-                    <button
-                      className="w-8 h-8 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white hover:shadow-md transition-all duration-micro"
-                      aria-label="Quick add to bag"
-                      onClick={(e) => handleQuickAdd(e, product)}
-                    >
-                      <ShoppingBag size={14} className="text-ink-600" />
-                    </button>
+                    {/* Quick-add only when the product has a buyable variant. */}
+                    {product.variant && (
+                      <button
+                        className="w-8 h-8 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white hover:shadow-md transition-all duration-micro"
+                        aria-label="Quick add to cart"
+                        onClick={(e) => handleQuickAdd(e, product)}
+                      >
+                        <ShoppingBag size={14} className="text-ink-600" />
+                      </button>
+                    )}
                   </div>
 
                   {/* Hover overlay */}

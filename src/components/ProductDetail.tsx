@@ -217,6 +217,11 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
 
   const hasImage = !!product.media?.[selectedImage]?.url;
   const outOfStock = stock.status === "out_of_stock";
+  // A product with no active variant is not purchasable — the server won't
+  // accept it into a cart. Reflect that honestly instead of showing a dead
+  // "Add to Cart" button that silently does nothing.
+  const hasBuyableVariant = !!selectedVariant;
+  const canAddToCart = hasBuyableVariant && !outOfStock;
 
   return (
     <div className="content-grid py-8 md:py-12">
@@ -317,10 +322,31 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
             </div>
           )}
 
-          {/* Stock status badge */}
-          <div className="mb-6" aria-live="polite" data-testid="stock-status">
-            <StockBadge state={stock} />
-          </div>
+          {/* Stock status badge — only meaningful when there's a buyable variant */}
+          {hasBuyableVariant && (
+            <div className="mb-6" aria-live="polite" data-testid="stock-status">
+              <StockBadge state={stock} />
+            </div>
+          )}
+
+          {/* Unavailable notice — product has no active/purchasable variant */}
+          {!hasBuyableVariant && (
+            <div
+              className="mb-6 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3"
+              role="status"
+            >
+              <AlertCircle size={16} className="text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-amber-800">
+                  Currently unavailable
+                </p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  This product isn&apos;t available for purchase right now. Please
+                  check back later or browse our other pieces.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           <ProductDescription text={product.description || product.shortDescription || ""} />
@@ -360,7 +386,8 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
             );
           })()}
 
-          {/* Quantity */}
+          {/* Quantity — hidden when the product can't be purchased */}
+          {hasBuyableVariant && (
           <div className="mb-6">
             <label className="text-sm font-medium text-ink-700 mb-2 block">Quantity</label>
             <div className="inline-flex items-center border border-ink-200 rounded-lg">
@@ -389,15 +416,16 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
               </button>
             </div>
           </div>
+          )}
 
           {/* Add to cart */}
           <div className="flex gap-3 mb-8">
             <button
               onClick={handleAddToCart}
-              disabled={outOfStock}
+              disabled={!canAddToCart}
               id="add-to-cart-btn"
               className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-lg font-semibold text-sm transition-all duration-standard ${
-                outOfStock
+                !canAddToCart
                   ? "bg-ink-200 text-ink-500 cursor-not-allowed"
                   : addedFeedback
                     ? "bg-green-600 text-white"
@@ -405,7 +433,13 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
               }`}
             >
               <ShoppingBag size={18} />
-              {outOfStock ? "Out of Stock" : addedFeedback ? "Added to Cart ✓" : "Add to Cart"}
+              {!hasBuyableVariant
+                ? "Unavailable"
+                : outOfStock
+                  ? "Out of Stock"
+                  : addedFeedback
+                    ? "Added to Cart ✓"
+                    : "Add to Cart"}
             </button>
             <button
               onClick={async () => {

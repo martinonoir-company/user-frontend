@@ -136,13 +136,16 @@ export default function CategoryProducts({ slug }: Props) {
                           >
                             <Heart size={14} className="text-ink-600" />
                           </button>
-                          <button
-                            className="w-8 h-8 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white hover:shadow-md transition-all"
-                            aria-label="Quick add to bag"
-                            onClick={(e) => handleQuickAdd(e, product)}
-                          >
-                            <ShoppingBag size={14} className="text-ink-600" />
-                          </button>
+                          {/* Quick-add only when the product has a buyable variant. */}
+                          {firstVariant && (
+                            <button
+                              className="w-8 h-8 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white hover:shadow-md transition-all"
+                              aria-label="Quick add to cart"
+                              onClick={(e) => handleQuickAdd(e, product)}
+                            >
+                              <ShoppingBag size={14} className="text-ink-600" />
+                            </button>
+                          )}
                         </div>
                       </div>
                       <div className="space-y-1">
