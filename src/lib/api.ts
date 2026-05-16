@@ -181,27 +181,57 @@ class ApiClient {
   }
 
   // ── Payments ──
+  // The client never talks to a payment provider directly. It calls our
+  // server, which mediates all Paystack communication.
 
+  /**
+   * Begin payment for an order. The server reads the authoritative amount
+   * from the order, calls Paystack, and returns the hosted-checkout URL.
+   */
   async initiatePayment(input: {
     orderId: string;
-    orderNumber: string;
-    amount: number;
-    currency: string;
-    customerEmail: string;
-    customerName: string;
-    provider?: string;
+    channel?: 'STOREFRONT' | 'MOBILE' | 'POS';
+    customerEmail?: string;
+    customerName?: string;
+    callbackUrl?: string;
   }) {
-    return this.request<{ data: { providerReference: string; checkoutUrl?: string; status: string; provider: string } }>('/payments/initiate', {
+    return this.request<{
+      data: {
+        paymentId: string;
+        merchantReference: string;
+        checkoutUrl?: string;
+        status: string;
+        amount: number;
+        currency: string;
+      };
+    }>('/payments/initiate', {
       method: 'POST',
-      body: JSON.stringify(input),
+      body: JSON.stringify({ channel: 'STOREFRONT', ...input }),
     });
   }
 
-  async verifyPayment(providerReference: string, provider: string) {
-    return this.request<{ data: { status: string; amount: number } }>('/payments/verify', {
-      method: 'POST',
-      body: JSON.stringify({ providerReference, provider }),
-    });
+  /**
+   * Ask the server to reconcile a payment with the provider and return
+   * the current status. Used on return from the hosted checkout.
+   */
+  async reconcilePayment(merchantReference: string) {
+    return this.request<{
+      data: {
+        paymentId: string;
+        merchantReference: string;
+        status: string;
+        amount: number;
+        currency: string;
+        failureReason?: string | null;
+      };
+    }>(`/payments/reconcile/${merchantReference}`, { method: 'POST' });
+  }
+
+  /** All payment rows for an order (read-only status check). */
+  async getOrderPayments(orderId: string) {
+    return this.request<{
+      data: Array<{ id: string; status: string; amount: number; merchantReference: string }>;
+    }>(`/payments/order/${orderId}`);
   }
 
   // ── Shipping ──

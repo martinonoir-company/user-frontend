@@ -87,7 +87,9 @@ export default function CheckoutView() {
     setLoading(false);
   };
 
-  // Place order
+  // Place order, then initiate payment and hand off to the Paystack
+  // hosted checkout. All provider communication is server-side; here we
+  // only follow the checkout URL the server returns.
   const handlePlaceOrder = async () => {
     setError(null);
     setPlacing(true);
@@ -111,14 +113,31 @@ export default function CheckoutView() {
         idempotencyKey: `checkout_${Date.now()}_${Math.random().toString(36).slice(2)}`,
       });
 
-      const orderId = res.data.orderNumber;
+      const order = res.data;
+
+      // Begin payment. The server returns the Paystack hosted-checkout URL.
+      const pay = await api.initiatePayment({
+        orderId: order.id,
+        channel: "STOREFRONT",
+        customerEmail: isAuthenticated ? undefined : guestEmail,
+        customerName: `${firstName} ${lastName}`.trim(),
+        callbackUrl: `${window.location.origin}/order-confirmation?order=${order.orderNumber}`,
+      });
+
+      if (!pay.data.checkoutUrl) {
+        throw new Error("Could not start payment. Please try again.");
+      }
+
+      // Cart is cleared only once we have a valid order + payment session.
       clearCart();
-      router.push(`/order-confirmation?order=${orderId}`);
+      // Hand off to the Paystack hosted page. On completion Paystack
+      // redirects the customer back to the callback URL above.
+      window.location.href = pay.data.checkoutUrl;
     } catch (err: unknown) {
       const msg = (err as { message?: string | string[] })?.message;
       setError(Array.isArray(msg) ? msg[0] : msg || "Failed to place order");
+      setPlacing(false);
     }
-    setPlacing(false);
   };
 
   if (items.length === 0) return null;
