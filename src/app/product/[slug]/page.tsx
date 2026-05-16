@@ -14,8 +14,12 @@ const SITE_URL =
 
 async function fetchProduct(slug: string): Promise<Product | null> {
   try {
+    // Short revalidate keeps the SSR payload (SEO + first paint) close to
+    // current truth. The client component also refetches live on mount, so
+    // the visible page self-heals even within this window — this just keeps
+    // the server-rendered HTML / metadata reasonably fresh.
     const res = await fetch(`${API_BASE}/products/slug/${slug}`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 60 },
     });
     if (!res.ok) return null;
     const json = await res.json();

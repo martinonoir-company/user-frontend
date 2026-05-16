@@ -72,9 +72,13 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
   const router = useRouter();
 
   useEffect(() => {
-    if (initialProduct) return;
     let cancelled = false;
-    setLoading(true);
+    // Always refetch live on mount. `initialProduct` is only the instant
+    // first paint — the SSR page caches its fetch (next: revalidate), so
+    // without this a variant reactivated in the admin would keep showing
+    // "Currently unavailable" until that page cache expired. A live fetch
+    // reconciles to current truth (active variants, prices, stock).
+    if (!initialProduct) setLoading(true);
 
     api
       .getProductBySlug(slug)
@@ -85,7 +89,9 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
         }
       })
       .catch(() => {
-        if (!cancelled) setError("Product not found");
+        // Only surface an error if we have nothing to show. If the SSR
+        // payload is already on screen, keep it rather than blanking out.
+        if (!cancelled && !initialProduct) setError("Product not found");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
