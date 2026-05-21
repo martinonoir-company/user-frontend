@@ -36,12 +36,9 @@ const values = [
 ];
 
 const milestones = [
-  { year: "2018", event: "Founded in Lagos by Martins Nwude with a single leather bag design." },
-  { year: "2019", event: "First collection sold out in 72 hours. Workshop expanded to 12 artisans." },
-  { year: "2021", event: "Launched clothing line. Opened flagship showroom in Onitsha." },
-  { year: "2023", event: "Introduced international shipping to 7+ countries." },
-  { year: "2024", event: "Reached 50,000 customers across Africa, Europe, and North America." },
-  { year: "2025", event: "Launched Martinonoir digital storefront and unified commerce platform." },
+  { year: "2018", event: "Founded in Imo State by Martin Nwude, inspired by a vision to create timeless bags defined by elegance and purpose." },
+  { year: "2020", event: "Expanded beyond borders, reaching customers who value refined style and everyday sophistication." },
+  { year: "2025", event: "A defining moment: the launch of Martino Noir’s digital storefront and unified commerce platform, ushering in a new era for the brand." },
 ];
 
 
