@@ -57,7 +57,7 @@ const footerLinks = {
   ],
   Legal: [
     { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms of Service", href: "/terms" },
+    { label: "Terms & Conditions", href: "/terms" },
     { label: "Cookie Policy", href: "/cookies" },
     { label: "Data Protection", href: "/data-protection" },
   ],
@@ -155,7 +155,18 @@ export default function Footer() {
           <p className="text-xs text-white/30">
             © {new Date().getFullYear()} Martinonoir. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap justify-center">
+            <button
+              onClick={() => {
+                try {
+                  localStorage.removeItem("mn_cookie_consent");
+                  window.location.reload();
+                } catch {}
+              }}
+              className="text-xs text-white/30 hover:text-accent-gold transition-colors duration-micro cursor-pointer"
+            >
+              Cookie Settings
+            </button>
             <span className="text-xs text-white/20">We accept:</span>
             <div className="flex items-center gap-2">
               {["Paystack", "Moniepoint", "Stripe", "Visa", "Mastercard"].map(
