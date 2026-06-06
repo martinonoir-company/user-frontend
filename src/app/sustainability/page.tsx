@@ -217,7 +217,7 @@ export default function SustainabilityPage() {
                   Sustainability is not a destination. It&apos;s a series of commitments, each building on the last. Here&apos;s our honest ledger.
                 </p>
                 <a
-                  href="mailto:press@martinonoir.com?subject=Sustainability Report Request"
+                  href="mailto:mail@martinonoir.com?subject=Sustainability Report Request"
                   className="group mt-8 inline-flex items-center gap-2 text-sm font-semibold text-primary-700 hover:text-primary-800 transition-colors duration-micro"
                 >
                   Request full Sustainability Report

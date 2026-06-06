@@ -43,7 +43,7 @@ export default function PrivacyPage() {
             "MARTINO NOIR LIMITED (“the Company”) is a fashion accessories company registered under the laws of the Federal Republic of Nigeria. We design, source, and sell fashion accessories including but not limited to bags, jewellery, belts, scarves, sunglasses, footwear accessories, and related items, through our website, physical retail outlets, and authorised third-party platforms.",
             "For the purposes of data protection law, MARTINO NOIR LIMITED is the Data Controller in respect of the personal data you provide to us or that we collect about you.",
             "Our registered address is: GFD 57, Young Shall Grow Shopping Complex, 2, Johnson Main Market, Onitsha, Anambra State, Nigeria.",
-            "Data Protection Officer Contact: Email: dpo@martinonoir.com ; mail@martinonoir.com  Telephone: +2348038010651",
+            "Data Protection Officer Contact: Email: dpo@martinonoir.com  Telephone: +2348038010651",
           ],
         },
         {
@@ -371,7 +371,7 @@ export default function PrivacyPage() {
           { label: "Name", value: "NWUDE MARTIN UCHENNA" },
           { label: "Company", value: "MARTINO NOIR LIMITED" },
           { label: "Address", value: "GFD 57, Young Shall Grow Shopping Complex, 2, Johnson Main Market, Onitsha, Anambra State, Nigeria." },
-          { label: "Email", value: "dpo@martinonoir.com; mail@martinonoir.com", href: "mailto:dpo@martinonoir.com" },
+          { label: "Email", value: "dpo@martinonoir.com", href: "mailto:dpo@martinonoir.com" },
           { label: "Telephone", value: "+2348038010651", href: "tel:+2348038010651" },
         ],
         outro:

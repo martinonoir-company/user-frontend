@@ -142,7 +142,7 @@ export default function CareersPage() {
                 meantime, you&apos;re welcome to send us an open application below.
               </p>
               <a
-                href="mailto:careers@martinonoir.com?subject=Open Application"
+                href="mailto:mail@martinonoir.com?subject=Open Application"
                 className="group mt-7 inline-flex items-center gap-2 px-6 py-3 bg-primary-700 hover:bg-primary-800 text-white text-sm font-semibold rounded-lg transition-all duration-standard hover:shadow-md"
               >
                 Send Open Application
@@ -169,7 +169,7 @@ export default function CareersPage() {
               We&apos;re always looking for exceptional people. Send us your CV and tell us what you&apos;d build at Martinonoir.
             </p>
             <a
-              href="mailto:careers@martinonoir.com"
+              href="mailto:mail@martinonoir.com"
               className="group mt-8 inline-flex items-center gap-2 px-8 py-4 bg-primary-700 hover:bg-primary-600 text-white font-semibold text-sm rounded-lg transition-all duration-standard hover:shadow-lg hover:-translate-y-0.5"
             >
               Send Open Application

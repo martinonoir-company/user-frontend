@@ -267,10 +267,10 @@ export default function LegalPage({
                   <p className="text-sm text-ink-600 leading-relaxed">
                     Questions about this policy? Contact us at{" "}
                     <a
-                      href="mailto:mail@martinonoir.com"
+                      href="mailto:dpo@martinonoir.com"
                       className="text-primary-700 font-medium hover:text-primary-800 transition-colors"
                     >
-                      mail@martinonoir.com
+                      dpo@martinonoir.com
                     </a>
                     .
                   </p>

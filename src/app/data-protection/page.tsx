@@ -331,7 +331,7 @@ export default function DataProtectionPage() {
           { label: "Name", value: "Nwude Martin Uchenna" },
           { label: "Company", value: "MARTINO NOIR LIMITED" },
           { label: "Address", value: "GFD 57, Young Shall Grow Shopping Complex, 2, Johnson Main Market, Onitsha, Anambra State, Nigeria." },
-          { label: "Email", value: "dpo@martinonoir.com; mail@martinonoir.com", href: "mailto:dpo@martinonoir.com" },
+          { label: "Email", value: "dpo@martinonoir.com", href: "mailto:dpo@martinonoir.com" },
           { label: "Telephone", value: "+2348038010651", href: "tel:+2348038010651" },
         ],
       }}

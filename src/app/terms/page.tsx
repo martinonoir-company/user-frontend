@@ -105,7 +105,7 @@ export default function TermsPage() {
             {
               heading: "4.2 Account Security",
               paragraphs: [
-                "You are responsible for maintaining the confidentiality of your account login credentials and for all activities that occur under your account. You must notify us immediately at mail@martinonoir.com if you become aware of any unauthorised access to or use of your account. We will not be liable for any loss or damage arising from your failure to protect your account credentials.",
+                "You are responsible for maintaining the confidentiality of your account login credentials and for all activities that occur under your account. You must notify us immediately at support@martinonoir.com if you become aware of any unauthorised access to or use of your account. We will not be liable for any loss or damage arising from your failure to protect your account credentials.",
               ],
             },
             {
@@ -121,7 +121,7 @@ export default function TermsPage() {
             },
             {
               paragraphs: [
-                "You may also close your account at any time by contacting us at mail@martinonoir.com. Closing your account does not affect any contractual obligations already incurred.",
+                "You may also close your account at any time by contacting us at support@martinonoir.com. Closing your account does not affect any contractual obligations already incurred.",
               ],
             },
           ],
@@ -284,7 +284,7 @@ export default function TermsPage() {
             {
               heading: "9.3 How to Initiate a Return",
               paragraphs: [
-                "To initiate a return, please contact our customer service team at mail@martinonoir.com within 7 days of delivery, providing your order number and reason for return. We will provide you with return instructions and a returns reference number. Items returned without prior authorisation may not be accepted.",
+                "To initiate a return, please contact our customer service team at support@martinonoir.com within 7 days of delivery, providing your order number and reason for return. We will provide you with return instructions and a returns reference number. Items returned without prior authorisation may not be accepted.",
               ],
             },
             {
@@ -302,7 +302,7 @@ export default function TermsPage() {
             {
               heading: "9.6 Faulty or Incorrect Items",
               paragraphs: [
-                "If you receive a faulty, damaged, or incorrect item, please contact us within 48 hours of delivery at mail@martinonoir.com with photographs and a description of the issue. We will arrange for a replacement, exchange, or full refund including delivery costs, at our election.",
+                "If you receive a faulty, damaged, or incorrect item, please contact us within 48 hours of delivery at support@martinonoir.com with photographs and a description of the issue. We will arrange for a replacement, exchange, or full refund including delivery costs, at our election.",
               ],
             },
             {
@@ -427,7 +427,7 @@ export default function TermsPage() {
           heading: "Governing Law and Dispute Resolution",
           paragraphs: [
             "These Terms and any dispute or claim arising out of or in connection with them shall be governed by and construed in accordance with the laws of the Federal Republic of Nigeria.",
-            "In the event of any dispute, you agree to first attempt to resolve the matter amicably by contacting our customer service team at mail@martinonoir.com. If the dispute cannot be resolved informally within 30 days, either party may refer the matter to the appropriate court of competent jurisdiction in Nigeria.",
+            "In the event of any dispute, you agree to first attempt to resolve the matter amicably by contacting our customer service team at dpo@martinonoir.com. If the dispute cannot be resolved informally within 30 days, either party may refer the matter to the appropriate court of competent jurisdiction in Nigeria.",
           ],
         },
         /* --------------------------------------------------------- 16 -- */
@@ -469,8 +469,8 @@ export default function TermsPage() {
           },
           {
             label: "Email",
-            value: "mail@martinonoir.com",
-            href: "mailto:mail@martinonoir.com",
+            value: "support@martinonoir.com",
+            href: "mailto:support@martinonoir.com",
           },
           {
             label: "Telephone",

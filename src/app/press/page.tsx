@@ -108,11 +108,11 @@ export default function PressPage() {
                   Press coverage, brand assets, and everything a journalist or content creator needs. For media inquiries, reach our press team directly.
                 </p>
                 <a
-                  href="mailto:press@martinonoir.com"
+                  href="mailto:mail@martinonoir.com"
                   className="group mt-8 inline-flex items-center gap-2 px-6 py-3.5 bg-primary-700 hover:bg-primary-600 text-white font-semibold text-sm rounded-lg transition-all duration-standard hover:shadow-lg hover:-translate-y-0.5"
                 >
                   <Mail size={15} />
-                  press@martinonoir.com
+                  mail@martinonoir.com
                   <ArrowRight size={14} className="transition-transform duration-standard group-hover:translate-x-1" />
                 </a>
               </div>
@@ -194,8 +194,8 @@ export default function PressPage() {
                 </p>
                 <p className="mt-3 text-sm text-ink-400">
                   All assets are licensed for editorial use. For commercial licensing, contact{" "}
-                  <a href="mailto:press@martinonoir.com" className="text-primary-700 hover:text-primary-800 transition-colors duration-micro font-medium">
-                    press@martinonoir.com
+                  <a href="mailto:mail@martinonoir.com" className="text-primary-700 hover:text-primary-800 transition-colors duration-micro font-medium">
+                    mail@martinonoir.com
                   </a>.
                 </p>
               </div>
@@ -233,7 +233,7 @@ export default function PressPage() {
             <h2 className="text-2xl md:text-3xl font-display font-bold text-white">Media Inquiry?</h2>
             <p className="mt-3 text-white/50 max-w-md mx-auto">Our communications team responds within one business day.</p>
             <a
-              href="mailto:press@martinonoir.com"
+              href="mailto:mail@martinonoir.com"
               className="group mt-8 inline-flex items-center gap-2 px-8 py-4 bg-primary-700 hover:bg-primary-600 text-white font-semibold text-sm rounded-lg transition-all duration-standard hover:shadow-lg hover:-translate-y-0.5"
             >
               Get in Touch

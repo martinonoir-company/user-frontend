@@ -17,18 +17,20 @@ function InstagramIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-function XIcon({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  );
-}
+
 
 function FacebookIcon({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
       <path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 1.09.044 1.613.115v3.146c-.427-.044-.72-.065-.822-.065-1.183 0-1.64.45-1.64 1.621v2.741h3.562l-.609 3.667h-2.953v8.168C19.396 22.556 23 18.166 23 12.903c0-5.55-4.507-10.056-10.056-10.056S2.888 7.353 2.888 12.903c0 4.87 3.467 8.95 8.063 9.874l.15-.086z" />
+    </svg>
+  );
+}
+
+function TiktokIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .8.11V9.4a6.27 6.27 0 0 0-3.66.11A6.33 6.33 0 0 0 2.5 15.82a6.34 6.34 0 0 0 10.94 4.47 6.27 6.27 0 0 0 1.76-4.47V8.32a8.25 8.25 0 0 0 4.39 1.82V6.69z" />
     </svg>
   );
 }
@@ -107,9 +109,9 @@ export default function Footer() {
             {/* Social */}
             <div className="mt-6 flex items-center gap-3">
               {[
-                { icon: InstagramIcon, href: "#", label: "Instagram" },
-                { icon: XIcon, href: "#", label: "X (Twitter)" },
-                { icon: FacebookIcon, href: "#", label: "Facebook" },
+                { icon: InstagramIcon, href: "https://www.instagram.com/martinonoir?igsh=Njg0cXk0ZXVyYzNh", label: "Instagram" },
+                { icon: FacebookIcon, href: "https://www.facebook.com/share/17aYEqDe4V/", label: "Facebook" },
+                { icon: TiktokIcon, href: "https://www.tiktok.com/@martinonoir?_r=1&_t=ZN-96Q0wJQJNAc", label: "TikTok" },
               ].map((social) => {
                 const Icon = social.icon;
                 return (
