@@ -76,7 +76,7 @@ const allFaqs = [
   {
     category: "Shipping",
     q: "How long does delivery take?",
-    a: "Lagos delivery: 1–2 business days. Other Nigerian states: 3–5 business days. International orders: 7–14 business days depending on destination.",
+    a: "Onitsha delivery: 1–2 business days. Other Nigerian states: 3–5 business days. International orders: 7–14 business days depending on destination.",
   },
   {
     category: "Shipping",

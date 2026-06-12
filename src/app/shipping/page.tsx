@@ -16,7 +16,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const domesticZones = [
-  { zone: "Lagos (Island & Mainland)", time: "1 – 2 business days", cost: "₦2,500", free: "Orders above ₦150,000" },
+  { zone: "Onitsha", time: "1 – 2 business days", cost: "₦2,500", free: "Orders above ₦150,000" },
   { zone: "Abuja, Port Harcourt", time: "2 – 3 business days", cost: "₦3,500", free: "Orders above ₦150,000" },
   { zone: "Other Nigerian States", time: "3 – 5 business days", cost: "₦4,000", free: "Orders above ₦150,000" },
 ];

@@ -31,7 +31,7 @@ export default function CartView() {
       const res = await api.getQuote(quoteItems, {
         currency,
         country: "NG",
-        state: "Lagos",
+        state: "Anambra",
         couponCode: coupon || undefined,
         channel: "STOREFRONT",
       });

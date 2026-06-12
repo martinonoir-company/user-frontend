@@ -39,7 +39,7 @@ export default function CheckoutView() {
   const [line1, setLine1] = useState("");
   const [line2, setLine2] = useState("");
   const [city, setCity] = useState("");
-  const [state, setState] = useState("Lagos");
+  const [state, setState] = useState("Anambra");
   const [country] = useState("NG");
   const [phone, setPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");

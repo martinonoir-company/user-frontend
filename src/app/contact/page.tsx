@@ -40,7 +40,7 @@ const channels = [
   {
     icon: MapPin,
     label: "Visit Us",
-    value: "Lagos, Nigeria",
+    value: "Onitsha, Nigeria",
     description: "Our store is open Monday through Saturday.",
     href: "#",
     cta: "Get directions",
@@ -59,7 +59,7 @@ const topics = [
 const faqs = [
   {
     q: "How long does shipping take?",
-    a: "Standard delivery within Lagos takes 1–2 business days. Other states typically take 3–5 business days. International orders ship within 7–14 business days.",
+    a: "Standard delivery within Onitsha takes 1–2 business days. Other states typically take 3–5 business days. International orders ship within 7–14 business days.",
   },
   {
     q: "What is your return policy?",

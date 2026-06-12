@@ -36,7 +36,7 @@ const MOCK_ORDERS: Record<string, MockOrder> = {
     items: ["Heritage Tote (Black)"],
     estimatedDelivery: "April 17, 2026",
     lastUpdate: "April 15, 2026 at 10:32 AM",
-    location: "Lagos Distribution Centre",
+    location: "Onitsha Distribution Centre",
   },
   "MN-00456": {
     number: "MN-00456",
