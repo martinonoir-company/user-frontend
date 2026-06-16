@@ -15,6 +15,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import OrderBarcode from "./OrderBarcode";
 
 type PayState = "verifying" | "paid" | "failed" | "pending" | "none";
 
@@ -160,12 +161,19 @@ export default function OrderConfirmation() {
       </p>
 
       {orderNumber && (
-        <div className="inline-flex items-center gap-2 bg-surface-1 border border-ink-100 rounded-lg px-6 py-3 mt-4 mb-8">
-          <Package size={18} className="text-primary-600" />
-          <span className="text-sm text-ink-500">Order Number:</span>
-          <span className="text-sm font-bold text-ink-900 font-mono">
-            {orderNumber}
-          </span>
+        <div className="flex flex-col items-center gap-3 mt-4 mb-8">
+          <div className="inline-flex items-center gap-2 bg-surface-1 border border-ink-100 rounded-lg px-6 py-3">
+            <Package size={18} className="text-primary-600" />
+            <span className="text-sm text-ink-500">Order Number:</span>
+            <span className="text-sm font-bold text-ink-900 font-mono">
+              {orderNumber}
+            </span>
+          </div>
+          {/* Scannable barcode so an in-store return can resolve the order
+              by scanning the printed/saved receipt in one motion. */}
+          <div className="bg-white border border-ink-100 rounded-lg px-4 py-3">
+            <OrderBarcode value={orderNumber} width={260} />
+          </div>
         </div>
       )}
 
