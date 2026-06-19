@@ -164,6 +164,125 @@ class ApiClient {
     });
   }
 
+  /**
+   * Marketing-agent helpers: signup, login, validate-code, dashboard.
+   * Auth flow uses the same JWT pair as customer auth — the only
+   * difference is the agent's role + the PENDING_APPROVAL gate.
+   */
+  async validateAgentCode(
+    code: string,
+  ): Promise<{ ok: true; agentName: string } | { ok: false; error: string }> {
+    try {
+      const res = await this.request<{
+        data: { agentId: string; code: string; agentName: string };
+      }>('/agents/validate-code', {
+        method: 'POST',
+        body: JSON.stringify({ code }),
+      });
+      return { ok: true, agentName: res.data.agentName };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e instanceof Error ? e.message : 'Could not verify code',
+      };
+    }
+  }
+
+  async agentSignup(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    password: string;
+    bankCode: string;
+    bankAccountNumber: string;
+  }) {
+    return this.request<{
+      data: {
+        id: string;
+        code: string;
+        status: string;
+        bankAccountName: string;
+        message: string;
+      };
+    }>('/agents/signup', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async agentLogin(email: string, password: string) {
+    return this.request<{
+      data: {
+        accessToken: string;
+        refreshToken: string;
+        expiresIn: number;
+        user: {
+          id: string;
+          email: string;
+          firstName: string;
+          lastName: string;
+          role: string;
+        };
+      };
+    }>('/agents/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async getAgentDashboard() {
+    return this.request<{ data: AgentDashboardView }>('/agents/me/dashboard');
+  }
+
+  async getAgentAttributions(params?: { page?: number; limit?: number }) {
+    const q = new URLSearchParams();
+    if (params?.page) q.set('page', String(params.page));
+    if (params?.limit) q.set('limit', String(params.limit));
+    return this.request<{
+      data: {
+        items: AgentAttributionView[];
+        total: number;
+        page: number;
+        limit: number;
+        pages: number;
+      };
+    }>(`/agents/me/attributions?${q.toString()}`);
+  }
+
+  async getAgentPayouts(params?: { page?: number; limit?: number }) {
+    const q = new URLSearchParams();
+    if (params?.page) q.set('page', String(params.page));
+    if (params?.limit) q.set('limit', String(params.limit));
+    return this.request<{
+      data: {
+        items: AgentPayoutView[];
+        total: number;
+        page: number;
+        limit: number;
+        pages: number;
+      };
+    }>(`/agents/me/payouts?${q.toString()}`);
+  }
+
+  /** Paystack bank list — public on /agents/banks for agent signup. */
+  async getRefundsBanks() {
+    return this.request<{ data: Array<{ name: string; code: string }> }>(
+      '/agents/banks',
+    );
+  }
+
+  async verifyBankAccount(input: { accountNumber: string; bankCode: string }) {
+    return this.request<{
+      data:
+        | { ok: true; accountName: string }
+        | { ok: false; error: string };
+    }>('/agents/verify-bank-account', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
   async getMyOrders(params?: { page?: number; limit?: number }) {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', String(params.page));
@@ -518,6 +637,66 @@ export interface CheckoutInput {
   customerNote?: string;
   guestEmail?: string;
   idempotencyKey?: string;
+  /** Marketing-agent referral code captured at checkout. */
+  agentCode?: string;
+}
+
+// ── Agent dashboard ──
+
+export interface MarketingAgentView {
+  id: string;
+  userId: string;
+  code: string;
+  bankCode: string;
+  bankAccountNumber: string;
+  bankAccountName: string;
+  status:
+    | "PENDING_APPROVAL"
+    | "APPROVED"
+    | "REJECTED"
+    | "SUSPENDED";
+  commissionRateBps?: number | null;
+  walletBalanceMinor: number;
+  lifetimeEarnedMinor: number;
+  lifetimePaidMinor: number;
+  createdAt: string;
+}
+
+export interface AgentAttributionView {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  orderTotalMinor: number;
+  commissionRateBps: number;
+  commissionMinor: number;
+  currency: string;
+  status: "PENDING" | "EARNED" | "REVERSED" | "PAID";
+  channel: string;
+  earnedAt?: string | null;
+  createdAt: string;
+}
+
+export interface AgentPayoutView {
+  id: string;
+  amountMinor: number;
+  currency: string;
+  attributionCount: number;
+  status: "PENDING" | "PROCESSING" | "SUCCEEDED" | "FAILED";
+  bankAccountName: string;
+  paidAt?: string | null;
+  createdAt: string;
+}
+
+export interface AgentDashboardView {
+  agent: MarketingAgentView;
+  totals: {
+    walletBalanceMinor: number;
+    lifetimeEarnedMinor: number;
+    lifetimePaidMinor: number;
+    ordersCount: number;
+  };
+  recentAttributions: AgentAttributionView[];
+  recentPayouts: AgentPayoutView[];
 }
 
 export interface Order {

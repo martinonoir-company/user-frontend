@@ -44,6 +44,38 @@ export default function CheckoutView() {
   const [phone, setPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [customerNote, setCustomerNote] = useState("");
+  // Marketing-agent referral code, optional. We validate against the
+  // server before submitting so a typo doesn't sit silently on the order.
+  const [agentCode, setAgentCode] = useState("");
+  const [agentVerified, setAgentVerified] = useState<{
+    code: string;
+    name: string;
+  } | null>(null);
+  const [agentVerifying, setAgentVerifying] = useState(false);
+  const [agentError, setAgentError] = useState<string | null>(null);
+
+  async function verifyAgentCode() {
+    const code = agentCode.trim().toUpperCase();
+    if (!code) return;
+    setAgentVerifying(true);
+    setAgentError(null);
+    try {
+      const res = await api.validateAgentCode(code);
+      if (res.ok) {
+        setAgentVerified({ code, name: res.agentName });
+      } else {
+        setAgentError(res.error);
+        setAgentVerified(null);
+      }
+    } catch (e) {
+      setAgentError(
+        e instanceof Error ? e.message : "Could not verify code",
+      );
+      setAgentVerified(null);
+    } finally {
+      setAgentVerifying(false);
+    }
+  }
 
   const cur = currency ?? "NGN";
   const subtotal = getSubtotal(cur);
@@ -110,6 +142,7 @@ export default function CheckoutView() {
         currency: cur,
         guestEmail: !isAuthenticated ? guestEmail : undefined,
         customerNote: customerNote || undefined,
+        agentCode: agentVerified?.code,
         idempotencyKey: `checkout_${Date.now()}_${Math.random().toString(36).slice(2)}`,
       });
 
@@ -249,6 +282,61 @@ export default function CheckoutView() {
                   <div>
                     <label className="block text-xs font-semibold text-ink-700 mb-1.5">Order Note</label>
                     <textarea value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} placeholder="Special instructions (optional)" rows={2} className={inputCls + " resize-none"} />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-ink-700 mb-1.5">
+                      Agent Code <span className="text-ink-400 font-normal">(optional)</span>
+                    </label>
+                    {agentVerified ? (
+                      <div className="flex items-center justify-between px-3 py-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                        <div className="text-sm">
+                          <span className="font-mono font-semibold text-emerald-700">
+                            ✓ {agentVerified.code}
+                          </span>
+                          <span className="text-ink-500 ml-2">
+                            {agentVerified.name}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAgentVerified(null);
+                            setAgentCode("");
+                            setAgentError(null);
+                          }}
+                          className="text-xs text-ink-500 hover:text-red-600 underline"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={agentCode}
+                          onChange={(e) =>
+                            setAgentCode(e.target.value.toUpperCase())
+                          }
+                          placeholder="e.g. ABC-XY12"
+                          maxLength={16}
+                          className={inputCls + " font-mono uppercase"}
+                        />
+                        <button
+                          type="button"
+                          onClick={verifyAgentCode}
+                          disabled={!agentCode.trim() || agentVerifying}
+                          className="px-4 py-2.5 bg-ink-100 hover:bg-ink-200 text-ink-700 text-xs font-medium rounded-lg disabled:opacity-50"
+                        >
+                          {agentVerifying ? "…" : "Verify"}
+                        </button>
+                      </div>
+                    )}
+                    {agentError && !agentVerified && (
+                      <p className="text-xs text-red-600 mt-1.5">
+                        ⚠ {agentError}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

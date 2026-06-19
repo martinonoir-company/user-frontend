@@ -48,6 +48,7 @@ const footerLinks = {
     { label: "Careers", href: "/careers" },
     { label: "Press", href: "/press" },
     { label: "Sustainability", href: "/sustainability" },
+    { label: "Marketing Agents", href: "/agent" },
   ],
   Support: [
     { label: "Help Center", href: "/help" },
