@@ -2,7 +2,6 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -12,7 +11,6 @@ interface Bank {
 }
 
 export default function AgentSignupPage() {
-  const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
