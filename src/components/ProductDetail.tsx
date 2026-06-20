@@ -102,6 +102,12 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
     };
   }, [slug, initialProduct]);
 
+  // When the variant changes, reset the gallery to the first image so
+  // we never land on an out-of-range index after the media list swaps.
+  useEffect(() => {
+    setSelectedImage(0);
+  }, [selectedVariant?.id]);
+
   // Check wishlist status
   useEffect(() => {
     if (!product || !isAuthenticated) return;
@@ -221,7 +227,22 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
     );
   }
 
-  const hasImage = !!product.media?.[selectedImage]?.url;
+  /**
+   * Media to render on the PDP, in priority order:
+   *   1. Images tagged to the currently-selected variant (if any).
+   *   2. The product's own gallery (variantId null) as a fallback.
+   * The two lists are NOT concatenated — once a variant has images,
+   * those replace the gallery entirely so the customer sees only what
+   * matches their selection.
+   */
+  const allMedia = product.media ?? [];
+  const variantMedia = selectedVariant
+    ? allMedia.filter((m) => m.variantId === selectedVariant.id)
+    : [];
+  const productMedia = allMedia.filter((m) => !m.variantId);
+  const displayMedia =
+    variantMedia.length > 0 ? variantMedia : productMedia;
+  const hasImage = !!displayMedia[selectedImage]?.url;
   const outOfStock = stock.status === "out_of_stock";
   // A product with no active variant is not purchasable — the server won't
   // accept it into a cart. Reflect that honestly instead of showing a dead
@@ -253,8 +274,12 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
           >
             {hasImage ? (
               <Image
-                src={product.media[selectedImage]!.url}
-                alt={product.media[selectedImage]!.alt || product.name}
+                src={displayMedia[selectedImage]!.url}
+                alt={
+                  displayMedia[selectedImage]!.alt ||
+                  displayMedia[selectedImage]!.altText ||
+                  product.name
+                }
                 fill
                 className="object-cover transition-transform duration-200 ease-out will-change-transform"
                 style={{
@@ -271,10 +296,12 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
             )}
           </div>
 
-          {/* Thumbnails */}
-          {product.media && product.media.length > 1 && (
+          {/* Thumbnails — sub-images under the main image. When the
+              selected variant has its own images, those replace the
+              product's gallery so the strip matches the choice. */}
+          {displayMedia.length > 1 && (
             <div className="flex gap-2 overflow-x-auto">
-              {product.media.map((media, i) => (
+              {displayMedia.map((media, i) => (
                 <button
                   key={media.id}
                   onClick={() => setSelectedImage(i)}
@@ -286,7 +313,9 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
                 >
                   <Image
                     src={media.url}
-                    alt={media.alt || `${product.name} ${i + 1}`}
+                    alt={
+                      media.alt || media.altText || `${product.name} ${i + 1}`
+                    }
                     fill
                     className="object-cover"
                     sizes="80px"

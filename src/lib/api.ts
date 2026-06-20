@@ -547,9 +547,19 @@ export interface ProductVariant {
 export interface ProductMedia {
   id: string;
   url: string;
-  alt: string;
-  type: string;
+  /** Server-side field is `altText` — the type tolerates either. */
+  alt?: string;
+  altText?: string;
+  /** Server-side field is `mediaType`. */
+  type?: string;
+  mediaType?: 'IMAGE' | 'VIDEO';
   sortOrder: number;
+  /**
+   * NULL → media belongs to the product as a whole. Non-null → media
+   * is specific to a variant (shown when that variant is selected on
+   * the PDP, and as a thumbnail in the variant strip).
+   */
+  variantId?: string | null;
 }
 
 export interface Category {
