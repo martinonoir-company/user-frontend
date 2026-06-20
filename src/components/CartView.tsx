@@ -229,6 +229,23 @@ export default function CartView() {
                 </span>
               </div>
 
+              {quote?.autoApply && (
+                <div className="flex justify-between text-emerald-700">
+                  <span>
+                    🎁 Promo applied{" "}
+                    <span className="text-xs text-emerald-600">
+                      ({quote.autoApply.code})
+                    </span>
+                  </span>
+                  <span>
+                    -
+                    {formatPrice(
+                      quote.autoApply.discountAmount,
+                      currency,
+                    )}
+                  </span>
+                </div>
+              )}
               {quote?.coupon && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount ({quote.coupon.code})</span>
