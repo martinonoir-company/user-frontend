@@ -37,8 +37,6 @@ export default function Header() {
     >
       {/* Top announcement bar */}
       <div className="bg-primary-900 text-white text-xs text-center py-2.5 px-4 tracking-wide">
-        <span>Complimentary shipping on orders above ₦150,000</span>
-        <span className="mx-3 opacity-50">|</span>
         <span>We ship worldwide 🌍</span>
       </div>
 
