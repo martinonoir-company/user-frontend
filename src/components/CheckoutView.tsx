@@ -40,10 +40,15 @@ export default function CheckoutView() {
   const [line2, setLine2] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("Anambra");
+  const [postalCode, setPostalCode] = useState("");
   const [country] = useState("NG");
   const [phone, setPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [customerNote, setCustomerNote] = useState("");
+  // Shipping opt-out: when ticked, no AAJ shipping is booked and the
+  // shipping fee is removed from the total. The customer arranges
+  // pickup themselves.
+  const [shippingOptOut, setShippingOptOut] = useState(false);
   // Marketing-agent referral code, optional. We validate against the
   // server before submitting so a typo doesn't sit silently on the order.
   const [agentCode, setAgentCode] = useState("");
@@ -136,6 +141,7 @@ export default function CheckoutView() {
           line2: line2 || undefined,
           city,
           state,
+          postalCode: postalCode || undefined,
           country,
           phone: phone || undefined,
         },
@@ -143,6 +149,7 @@ export default function CheckoutView() {
         guestEmail: !isAuthenticated ? guestEmail : undefined,
         customerNote: customerNote || undefined,
         agentCode: agentVerified?.code,
+        shippingOptOut,
         idempotencyKey: `checkout_${Date.now()}_${Math.random().toString(36).slice(2)}`,
       });
 
@@ -261,7 +268,7 @@ export default function CheckoutView() {
                     <input type="text" value={line2} onChange={(e) => setLine2(e.target.value)} placeholder="Apartment, suite (optional)" className={inputCls} />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-ink-700 mb-1.5">City *</label>
                       <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="Lagos" className={inputCls} />
@@ -272,7 +279,36 @@ export default function CheckoutView() {
                         {NG_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-ink-700 mb-1.5">
+                        Postal Code {shippingOptOut ? "" : "*"}
+                      </label>
+                      <input
+                        type="text"
+                        value={postalCode}
+                        onChange={(e) => setPostalCode(e.target.value)}
+                        required={!shippingOptOut}
+                        placeholder="100001"
+                        className={inputCls}
+                      />
+                    </div>
                   </div>
+
+                  {/* Shipping opt-out */}
+                  <label className="flex items-start gap-2.5 cursor-pointer rounded-lg border border-ink-200 bg-surface-1 px-3 py-2.5">
+                    <input
+                      type="checkbox"
+                      checked={shippingOptOut}
+                      onChange={(e) => setShippingOptOut(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 accent-primary-700"
+                    />
+                    <span className="text-sm text-ink-700">
+                      I don&apos;t need shipping — I&apos;ll arrange pickup myself.
+                      <span className="block text-xs text-ink-400 mt-0.5">
+                        No shipping fee will be charged and no delivery will be booked.
+                      </span>
+                    </span>
+                  </label>
 
                   <div>
                     <label className="block text-xs font-semibold text-ink-700 mb-1.5">Phone</label>
@@ -436,8 +472,20 @@ export default function CheckoutView() {
                   )}
                   <div className="flex justify-between text-ink-600">
                     <span>Shipping</span>
-                    <span>{quote.shippingTotal === 0 ? "Free" : formatPrice(String(quote.shippingTotal), cur)}</span>
+                    <span>
+                      {shippingOptOut
+                        ? "Not required"
+                        : quote.shippingTotal === 0
+                          ? "Calculated at payment"
+                          : formatPrice(String(quote.shippingTotal), cur)}
+                    </span>
                   </div>
+                  {!shippingOptOut && quote.shippingTotal > 0 && (
+                    <p className="text-[11px] text-ink-400 -mt-1">
+                      Shipping is an estimate from AAJ Express; the final
+                      price may vary slightly.
+                    </p>
+                  )}
                   <div className="flex justify-between text-ink-600">
                     <span>Tax</span>
                     <span>{formatPrice(String(quote.taxTotal), cur)}</span>
@@ -447,7 +495,16 @@ export default function CheckoutView() {
               <hr className="border-ink-100 my-2" />
               <div className="flex justify-between text-base font-bold text-ink-900">
                 <span>Total</span>
-                <span>{formatPrice(String(quote?.grandTotal ?? subtotal), cur)}</span>
+                <span>
+                  {formatPrice(
+                    String(
+                      shippingOptOut && quote
+                        ? quote.grandTotal - quote.shippingTotal
+                        : (quote?.grandTotal ?? subtotal),
+                    ),
+                    cur,
+                  )}
+                </span>
               </div>
             </div>
           </div>

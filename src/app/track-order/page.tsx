@@ -16,50 +16,37 @@ import {
 import { useInView } from "@/hooks/useInView";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { api, ShippingTracking } from "@/lib/api";
 
-/* Mock order statuses */
-type OrderStatus = "processing" | "shipped" | "out_for_delivery" | "delivered";
-
-interface MockOrder {
-  number: string;
-  status: OrderStatus;
-  items: string[];
-  estimatedDelivery: string;
-  lastUpdate: string;
-  location: string;
-}
-
-const MOCK_ORDERS: Record<string, MockOrder> = {
-  "MN-00123": {
-    number: "MN-00123",
-    status: "shipped",
-    items: ["Heritage Tote (Black)"],
-    estimatedDelivery: "April 17, 2026",
-    lastUpdate: "April 15, 2026 at 10:32 AM",
-    location: "Onitsha Distribution Centre",
-  },
-  "MN-00456": {
-    number: "MN-00456",
-    status: "delivered",
-    items: ["Milano Crossbody (Cognac)", "Executive Wallet"],
-    estimatedDelivery: "April 13, 2026",
-    lastUpdate: "April 13, 2026 at 2:14 PM",
-    location: "Delivered to front door",
-  },
-};
-
-const steps: { key: OrderStatus; label: string; icon: typeof Package }[] = [
-  { key: "processing", label: "Order Placed", icon: Package },
-  { key: "shipped", label: "Shipped", icon: Truck },
-  { key: "out_for_delivery", label: "Out for Delivery", icon: MapPin },
-  { key: "delivered", label: "Delivered", icon: CheckCircle2 },
+/**
+ * AAJ status enum → the 5-step stepper. AAJ:
+ *   0 LABEL_CREATED, 1 PICKED_UP, 2 IN_TRANSIT, 3 OUT_FOR_DELIVERY, 4 DELIVERED.
+ * We collapse PICKED_UP + the booking stage into "Shipped" for a clean
+ * 4-step bar that mirrors the order lifecycle a customer expects.
+ */
+const steps: { label: string; icon: typeof Package; minStatus: number }[] = [
+  { label: "Order Placed", icon: Package, minStatus: 0 },
+  { label: "Shipped", icon: Truck, minStatus: 1 },
+  { label: "Out for Delivery", icon: MapPin, minStatus: 3 },
+  { label: "Delivered", icon: CheckCircle2, minStatus: 4 },
 ];
 
-const statusOrder: OrderStatus[] = ["processing", "shipped", "out_for_delivery", "delivered"];
-
-function getStepIndex(status: OrderStatus) {
-  return statusOrder.indexOf(status);
+/** Map an AAJ status code to the active stepper index (0..3). */
+function stepIndexFromStatus(status: number | null): number {
+  if (status === null) return 0;
+  if (status >= 4) return 3;
+  if (status >= 3) return 2;
+  if (status >= 1) return 1;
+  return 0;
 }
+
+const STATUS_LABELS: Record<number, string> = {
+  0: "Label created",
+  1: "Picked up",
+  2: "In transit",
+  3: "Out for delivery",
+  4: "Delivered",
+};
 
 export default function TrackOrderPage() {
   const formRef = useRef<HTMLDivElement>(null);
@@ -70,24 +57,28 @@ export default function TrackOrderPage() {
 
   const [orderNumber, setOrderNumber] = useState("");
   const [email, setEmail] = useState("");
-  const [result, setResult] = useState<MockOrder | null>(null);
+  const [result, setResult] = useState<ShippingTracking | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSearched(true);
-    const found = MOCK_ORDERS[orderNumber.toUpperCase().trim()];
-    if (found) {
-      setResult(found);
-      setNotFound(false);
-    } else {
-      setResult(null);
+    setLoading(true);
+    setNotFound(false);
+    setResult(null);
+    try {
+      const res = await api.trackByOrderNumber(orderNumber.trim());
+      setResult(res.data);
+    } catch {
       setNotFound(true);
+    } finally {
+      setLoading(false);
     }
   }
 
-  const currentStep = result ? getStepIndex(result.status) : -1;
+  const currentStep = result ? stepIndexFromStatus(result.status) : -1;
 
   return (
     <>
@@ -158,19 +149,14 @@ export default function TrackOrderPage() {
                   </div>
                   <button
                     type="submit"
-                    className="group w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm rounded-lg transition-all duration-standard hover:shadow-lg hover:-translate-y-0.5"
+                    disabled={loading}
+                    className="group w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm rounded-lg transition-all duration-standard hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-60"
                   >
                     <Search size={16} />
-                    Track Order
+                    {loading ? "Tracking…" : "Track Order"}
                     <ArrowRight size={14} className="transition-transform duration-standard group-hover:translate-x-1" />
                   </button>
                 </form>
-
-                {/* demo hint */}
-                <p className="mt-5 text-xs text-ink-400 text-center">
-                  Try demo orders: <button onClick={() => setOrderNumber("MN-00123")} className="text-primary-600 font-medium hover:text-primary-700">MN-00123</button> or{" "}
-                  <button onClick={() => setOrderNumber("MN-00456")} className="text-primary-600 font-medium hover:text-primary-700">MN-00456</button>
-                </p>
               </div>
 
               {/* ── Not found ── */}
@@ -194,65 +180,154 @@ export default function TrackOrderPage() {
                 <div className="mt-6 bg-surface-0 rounded-2xl border border-rule/60 p-8 shadow-sm animate-scale-in">
                   <div className="flex items-start justify-between gap-4 mb-8">
                     <div>
-                      <p className="text-xs font-bold tracking-widest text-primary-600 uppercase mb-1">Order {result.number}</p>
-                      <p className="text-sm text-ink-500">{result.items.join(", ")}</p>
+                      <p className="text-xs font-bold tracking-widest text-primary-600 uppercase mb-1">
+                        Order {result.orderNumber ?? orderNumber.trim()}
+                      </p>
+                      {result.trackingNumber && (
+                        <p className="text-sm text-ink-500 font-mono">
+                          AAJ {result.trackingNumber}
+                        </p>
+                      )}
                     </div>
-                    <span className={`shrink-0 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide ${
-                      result.status === "delivered"
-                        ? "bg-success-light text-success"
-                        : "bg-primary-100 text-primary-700"
-                    }`}>
-                      {result.status.replace("_", " ")}
+                    <span
+                      className={`shrink-0 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide ${
+                        result.status === 4
+                          ? "bg-success-light text-success"
+                          : result.pending
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-primary-100 text-primary-700"
+                      }`}
+                    >
+                      {result.optedOut
+                        ? "Self-pickup"
+                        : result.pending
+                          ? "Preparing"
+                          : STATUS_LABELS[result.status ?? 0] ?? "Processing"}
                     </span>
                   </div>
 
-                  {/* stepper */}
-                  <div className="relative mb-8">
-                    {/* progress bar */}
-                    <div className="absolute top-5 left-5 right-5 h-0.5 bg-rule/60" />
-                    <div
-                      className="absolute top-5 left-5 h-0.5 bg-primary-600 transition-all duration-[1000ms] ease-enter"
-                      style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
-                    />
-                    <div className="relative flex justify-between">
-                      {steps.map((step, i) => {
-                        const Icon = step.icon;
-                        const done = i <= currentStep;
-                        const active = i === currentStep;
-                        return (
-                          <div key={step.key} className="flex flex-col items-center gap-2">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-standard z-10 ${
-                              done
-                                ? "bg-primary-700 border-primary-700"
-                                : "bg-surface-0 border-rule/50"
-                            } ${active ? "ring-4 ring-primary-200" : ""}`}>
-                              <Icon size={16} className={done ? "text-white" : "text-ink-300"} />
-                            </div>
-                            <span className={`text-[10px] font-semibold text-center leading-tight max-w-[60px] ${done ? "text-ink-700" : "text-ink-300"}`}>
-                              {step.label}
+                  {/* Opted out — no shipment to track */}
+                  {result.optedOut ? (
+                    <p className="text-sm text-ink-500">
+                      This order was placed for self-pickup, so there is no
+                      delivery to track.
+                    </p>
+                  ) : result.pending ? (
+                    <p className="text-sm text-ink-500">
+                      {result.description ||
+                        "We're still arranging your shipment. Check back in a few minutes."}
+                    </p>
+                  ) : (
+                    <>
+                      {/* stepper */}
+                      <div className="relative mb-8">
+                        <div className="absolute top-5 left-5 right-5 h-0.5 bg-rule/60" />
+                        <div
+                          className="absolute top-5 left-5 h-0.5 bg-primary-600 transition-all duration-[1000ms] ease-enter"
+                          style={{
+                            width: `${(currentStep / (steps.length - 1)) * 100}%`,
+                          }}
+                        />
+                        <div className="relative flex justify-between">
+                          {steps.map((step, i) => {
+                            const Icon = step.icon;
+                            const done = i <= currentStep;
+                            const active = i === currentStep;
+                            return (
+                              <div
+                                key={step.label}
+                                className="flex flex-col items-center gap-2"
+                              >
+                                <div
+                                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-standard z-10 ${
+                                    done
+                                      ? "bg-primary-700 border-primary-700"
+                                      : "bg-surface-0 border-rule/50"
+                                  } ${active ? "ring-4 ring-primary-200" : ""}`}
+                                >
+                                  <Icon
+                                    size={16}
+                                    className={done ? "text-white" : "text-ink-300"}
+                                  />
+                                </div>
+                                <span
+                                  className={`text-[10px] font-semibold text-center leading-tight max-w-[60px] ${
+                                    done ? "text-ink-700" : "text-ink-300"
+                                  }`}
+                                >
+                                  {step.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Latest + ETA */}
+                      <div className="space-y-3 text-sm">
+                        <div className="flex items-center gap-3 text-ink-600">
+                          <Clock size={15} className="text-primary-500 shrink-0" />
+                          <span>
+                            <span className="font-medium text-ink-800">
+                              Latest:
+                            </span>{" "}
+                            {result.description ||
+                              STATUS_LABELS[result.status ?? 0]}
+                          </span>
+                        </div>
+                        {result.etaDate && result.status !== 4 && (
+                          <div className="flex items-center gap-3 text-ink-600">
+                            <Truck size={15} className="text-primary-500 shrink-0" />
+                            <span>
+                              <span className="font-medium text-ink-800">
+                                Estimated delivery:
+                              </span>{" "}
+                              {new Date(result.etaDate).toLocaleDateString(
+                                "en-NG",
+                                {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                },
+                              )}
                             </span>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 text-sm">
-                    <div className="flex items-center gap-3 text-ink-600">
-                      <Clock size={15} className="text-primary-500 shrink-0" />
-                      <span><span className="font-medium text-ink-800">Last update:</span> {result.lastUpdate}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-ink-600">
-                      <MapPin size={15} className="text-primary-500 shrink-0" />
-                      <span><span className="font-medium text-ink-800">Location:</span> {result.location}</span>
-                    </div>
-                    {result.status !== "delivered" && (
-                      <div className="flex items-center gap-3 text-ink-600">
-                        <Truck size={15} className="text-primary-500 shrink-0" />
-                        <span><span className="font-medium text-ink-800">Estimated delivery:</span> {result.estimatedDelivery}</span>
+                        )}
                       </div>
-                    )}
-                  </div>
+
+                      {/* Event timeline */}
+                      {result.events.length > 0 && (
+                        <ol className="mt-6 pt-6 border-t border-rule/40 space-y-4">
+                          {[...result.events].reverse().map((ev, i) => (
+                            <li key={i} className="flex gap-3">
+                              <div className="flex flex-col items-center">
+                                <div
+                                  className={`w-2.5 h-2.5 rounded-full mt-1 ${
+                                    i === 0 ? "bg-primary-600" : "bg-ink-200"
+                                  }`}
+                                />
+                                {i < result.events.length - 1 && (
+                                  <div className="w-px flex-1 bg-rule/50 my-1" />
+                                )}
+                              </div>
+                              <div className="pb-1">
+                                <p className="text-sm text-ink-800 font-medium">
+                                  {ev.description}
+                                </p>
+                                <p className="text-xs text-ink-400 mt-0.5">
+                                  {ev.location ? `${ev.location} · ` : ""}
+                                  {new Date(ev.dateTime).toLocaleString("en-NG", {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                  })}
+                                </p>
+                              </div>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
             </div>

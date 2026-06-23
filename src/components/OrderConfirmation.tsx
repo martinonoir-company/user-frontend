@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import OrderBarcode from "./OrderBarcode";
+import DispatchProgress from "./DispatchProgress";
 
 type PayState = "verifying" | "paid" | "failed" | "pending" | "none";
 
@@ -175,6 +176,11 @@ export default function OrderConfirmation() {
             <OrderBarcode value={orderNumber} width={260} />
           </div>
         </div>
+      )}
+
+      {/* Post-payment dispatch progress — only after a confirmed payment. */}
+      {payState === "paid" && orderNumber && (
+        <DispatchProgress orderNumber={orderNumber} />
       )}
 
       <div className="bg-surface-0 border border-ink-100 rounded-xl p-6 md:p-8 text-left mb-8">

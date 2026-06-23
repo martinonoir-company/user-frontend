@@ -76,7 +76,6 @@ export default function Header() {
               { label: "Backpack / Laptop", href: "/category/backpack-bags" },
               { label: "Messenger / Office", href: "/category/messenger-bags" },
               { label: "Travel / Duffel", href: "/category/travel-bags" },
-              { label: "Sale", href: "/sale" },
             ].map((item) => (
               <Link
                 key={item.href}

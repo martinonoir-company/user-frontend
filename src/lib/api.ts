@@ -299,6 +299,44 @@ class ApiClient {
     return this.request<{ data: Order }>(`/orders/number/${orderNumber}`);
   }
 
+  // ── Shipping (AAJ Express) ──
+
+  /**
+   * Post-payment dispatch progress for an order. Returns a `progress`
+   * value (0–100) the UI animates as AAJ create-booking → process-booking
+   * complete. Poll this every ~3s until trackingId is set.
+   */
+  async getShippingState(orderId: string) {
+    return this.request<{
+      data: {
+        orderId: string;
+        orderNumber: string;
+        optedOut: boolean;
+        bookingId: string | null;
+        trackingId: string | null;
+        labelUrl: string | null;
+        status: number | null;
+        progress: number;
+        lastError: string | null;
+        retryCount: number;
+      };
+    }>(`/orders/${orderId}/shipping`);
+  }
+
+  /** Live tracking for the customer's own order (authenticated). */
+  async getOrderTracking(orderId: string) {
+    return this.request<{ data: ShippingTracking }>(
+      `/orders/${orderId}/tracking`,
+    );
+  }
+
+  /** Public tracking by order number — for the /track-order page. */
+  async trackByOrderNumber(orderNumber: string) {
+    return this.request<{ data: ShippingTracking }>(
+      `/orders/public/track/${encodeURIComponent(orderNumber)}`,
+    );
+  }
+
   // ── Payments ──
   // The client never talks to a payment provider directly. It calls our
   // server, which mediates all Paystack communication.
@@ -651,6 +689,8 @@ export interface CheckoutInput {
   idempotencyKey?: string;
   /** Marketing-agent referral code captured at checkout. */
   agentCode?: string;
+  /** When true, skip AAJ shipping — no fee, no delivery booked. */
+  shippingOptOut?: boolean;
 }
 
 // ── Agent dashboard ──
@@ -709,6 +749,28 @@ export interface AgentDashboardView {
   };
   recentAttributions: AgentAttributionView[];
   recentPayouts: AgentPayoutView[];
+}
+
+export interface ShippingTrackingEvent {
+  dateTime: string;
+  /** 0=LABEL_CREATED, 1=PICKED_UP, 2=IN_TRANSIT, 3=OUT_FOR_DELIVERY, 4=DELIVERED. */
+  status: number;
+  scanType: string;
+  description: string;
+  location: string;
+}
+
+export interface ShippingTracking {
+  orderNumber?: string;
+  trackingNumber: string | null;
+  status: number | null;
+  description: string;
+  etaDays?: number;
+  etaDate?: string;
+  events: ShippingTrackingEvent[];
+  labelUrl?: string | null;
+  optedOut: boolean;
+  pending: boolean;
 }
 
 export interface Order {
