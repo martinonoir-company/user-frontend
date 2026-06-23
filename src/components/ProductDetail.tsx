@@ -154,6 +154,15 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
     if (!product || !selectedVariant) return;
     if (stock.status === "out_of_stock") return;
 
+    // Cart thumbnail: prefer an image tagged to the selected variant so
+    // the cart / checkout shows what the customer actually picked. Fall
+    // back to the product's first image when the variant has none. This
+    // is display-only — the variantId sent for purchase is unchanged.
+    const variantImage =
+      (product.media ?? []).find(
+        (m) => m.variantId === selectedVariant.id,
+      )?.url ?? product.media?.find((m) => !m.variantId)?.url ?? product.media?.[0]?.url;
+
     addItem(
       {
         variantId: selectedVariant.id,
@@ -165,7 +174,7 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
         priceNgn: parseInt(selectedVariant.retailPriceNgn, 10),
         priceUsd: parseInt(selectedVariant.retailPriceUsd, 10),
         options: selectedVariant.options ?? {},
-        imageUrl: product.media?.[0]?.url,
+        imageUrl: variantImage,
       },
       quantity,
     );

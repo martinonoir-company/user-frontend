@@ -32,7 +32,14 @@ interface DisplayProduct {
 
 function toDisplayProduct(p: Product): DisplayProduct {
   const firstVariant = p.variants?.[0];
-  const firstMedia = p.media?.[0];
+  // Prefer the first variant's own image, then a product-level image,
+  // then any media. Keeps the featured card consistent with what the
+  // customer sees once a variant is selected.
+  const firstMedia =
+    (firstVariant &&
+      p.media?.find((m) => m.variantId === firstVariant.id)) ??
+    p.media?.find((m) => !m.variantId) ??
+    p.media?.[0];
   return {
     id: p.id,
     name: p.name,
