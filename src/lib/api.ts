@@ -146,6 +146,26 @@ class ApiClient {
     return this.request<{ data: Product }>(`/products/${id}`);
   }
 
+  /**
+   * Active promotional discounts for a product's variants (auto-apply,
+   * variant-scoped). Used by the PDP to render a "20% off" / "₦400 off"
+   * badge. Public — works for guests. Display-only.
+   */
+  async getVariantPromotions(
+    variantIds: string[],
+    currency: string,
+    channel = 'STOREFRONT',
+  ) {
+    const qs = new URLSearchParams({
+      variantIds: variantIds.join(','),
+      currency,
+      channel,
+    });
+    return this.request<{ data: VariantPromotion[] }>(
+      `/coupons/promotions/active?${qs.toString()}`,
+    );
+  }
+
   // ── Quote ──
 
   async getQuote(items: QuoteItem[], context: QuoteContext) {
@@ -580,6 +600,14 @@ export interface ProductVariant {
   options: Record<string, string>;
   barcode: string | null;
   sortOrder: number;
+}
+
+/** A live promotional discount on a single variant (for the PDP badge). */
+export interface VariantPromotion {
+  variantId: string;
+  discountType: 'PERCENTAGE' | 'FIXED_AMOUNT' | 'FREE_SHIPPING';
+  discountValue: number;
+  currency: string | null;
 }
 
 export interface ProductMedia {

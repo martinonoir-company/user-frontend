@@ -78,7 +78,7 @@ export default function ShippingPage() {
                 <div className="mt-8 inline-flex items-center gap-3 px-5 py-3.5 bg-success/10 border border-success/20 rounded-xl">
                   <CheckCircle2 size={18} className="text-success shrink-0" />
                   <p className="text-sm text-white/80">
-                    <span className="font-semibold text-white">Free shipping</span> on all Nigerian orders above ₦150,000
+                    <span className="font-semibold text-white">Shipping available</span> on all Nigerian and international orders
                   </p>
                 </div>
               </div>
@@ -161,7 +161,6 @@ export default function ShippingPage() {
                       <th className="px-6 py-4 text-left text-xs font-semibold text-ink-500 uppercase tracking-wider">Destination</th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-ink-500 uppercase tracking-wider">Delivery Time</th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-ink-500 uppercase tracking-wider">Standard Rate</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-ink-500 uppercase tracking-wider">Free Shipping</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -170,7 +169,6 @@ export default function ShippingPage() {
                         <td className="px-6 py-4 font-medium text-ink-900">{zone.zone}</td>
                         <td className="px-6 py-4 text-ink-600">{zone.time}</td>
                         <td className="px-6 py-4 font-semibold text-ink-900">{zone.cost}</td>
-                        <td className="px-6 py-4 text-success text-xs font-medium">{zone.free}</td>
                       </tr>
                     ))}
                   </tbody>

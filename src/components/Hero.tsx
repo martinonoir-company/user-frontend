@@ -129,7 +129,7 @@ export default function Hero() {
             style={{ transitionDelay: "600ms" }}
           >
             {[
-              "Free Shipping over ₦150k",
+              "Shipping available",
               "Authentic Leather",
               "30-Day Returns",
             ].map((badge) => (

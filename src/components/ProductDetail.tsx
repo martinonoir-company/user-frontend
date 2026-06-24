@@ -19,7 +19,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { api, Product, ProductVariant, StockLevel } from "@/lib/api";
+import { api, Product, ProductVariant, StockLevel, VariantPromotion } from "@/lib/api";
 import { getVariantPrice, formatPrice } from "@/lib/price";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
@@ -49,6 +49,23 @@ function pickDefaultVariant(p: Product | null | undefined): ProductVariant | nul
   return variants.find((v) => v.isActive) ?? variants[0] ?? null;
 }
 
+/**
+ * Human label for a variant promotion badge, e.g. "20% OFF" or "₦400 OFF".
+ * Returns null for promotions that can't be shown as a price cut (e.g. a
+ * free-shipping promo, or a fixed-amount discount in a different currency
+ * than the one being displayed).
+ */
+function promoLabel(p: VariantPromotion, displayCurrency: string): string | null {
+  if (p.discountType === "PERCENTAGE") {
+    return `${p.discountValue}% off`;
+  }
+  if (p.discountType === "FIXED_AMOUNT") {
+    const cur = p.currency ?? displayCurrency;
+    return `${formatPrice(p.discountValue, cur)} off`;
+  }
+  return null;
+}
+
 export default function ProductDetail({ slug, initialProduct }: Props) {
   const [product, setProduct] = useState<Product | null>(initialProduct ?? null);
   const [loading, setLoading] = useState(!initialProduct);
@@ -62,6 +79,10 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [stock, setStock] = useState<StockState>({ status: "loading" });
+  // Live promotional discounts keyed by variantId, for the "X% off" badge.
+  const [promotions, setPromotions] = useState<Record<string, VariantPromotion>>(
+    {},
+  );
 
   // Image zoom state (mouse-tracked)
   const imageBoxRef = useRef<HTMLDivElement>(null);
@@ -71,7 +92,7 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
   const touchStartX = useRef<number | null>(null);
 
   const { addItem } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, currency } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -104,6 +125,32 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
       cancelled = true;
     };
   }, [slug, initialProduct]);
+
+  // Fetch live promotional discounts for all of this product's variants so
+  // the badge can appear the moment a discounted variant is selected. Keyed
+  // by variantId; quietly does nothing on error (the badge is optional).
+  useEffect(() => {
+    const ids = (product?.variants ?? []).map((v) => v.id).filter(Boolean);
+    if (ids.length === 0) {
+      setPromotions({});
+      return;
+    }
+    let cancelled = false;
+    api
+      .getVariantPromotions(ids, currency)
+      .then((res) => {
+        if (cancelled) return;
+        const map: Record<string, VariantPromotion> = {};
+        for (const p of res.data) map[p.variantId] = p;
+        setPromotions(map);
+      })
+      .catch(() => {
+        if (!cancelled) setPromotions({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [product?.id, currency]);
 
   // When the variant changes, reset the gallery to the first image so
   // we never land on an out-of-range index after the media list swaps.
@@ -425,6 +472,20 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
                     {formatPrice(selectedVariant.compareAtPriceNgn, "NGN")}
                   </span>
                 )}
+              {/* Live promotion badge for the selected variant. */}
+              {selectedVariant &&
+                promotions[selectedVariant.id] &&
+                (() => {
+                  const label = promoLabel(
+                    promotions[selectedVariant.id]!,
+                    currency,
+                  );
+                  return label ? (
+                    <span className="inline-flex items-center rounded-full bg-red-600 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                      {label}
+                    </span>
+                  ) : null;
+                })()}
             </div>
           )}
 
@@ -588,8 +649,7 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
           <div className="grid grid-cols-3 gap-4 pt-6 border-t border-ink-100">
             <div className="text-center">
               <Truck size={20} className="mx-auto text-primary-600 mb-1" />
-              <p className="text-xs text-ink-600 font-medium">Free Shipping</p>
-              <p className="text-[10px] text-ink-400">Over ₦50,000</p>
+              <p className="text-xs text-ink-600 font-medium">Shipping available</p>
             </div>
             <div className="text-center">
               <Shield size={20} className="mx-auto text-primary-600 mb-1" />

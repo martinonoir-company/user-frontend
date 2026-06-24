@@ -554,7 +554,7 @@ export default function CheckoutView() {
           <div className="mt-4 space-y-2.5">
             {[
               { icon: <Shield size={14} />, text: "Secure checkout" },
-              { icon: <Truck size={14} />, text: "Free shipping over ₦150,000" },
+              { icon: <Truck size={14} />, text: "Shipping available" },
             ].map((item) => (
               <div key={item.text} className="flex items-center gap-2 text-xs text-ink-400">
                 <span className="text-primary-500">{item.icon}</span>
