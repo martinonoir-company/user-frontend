@@ -11,6 +11,7 @@ import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { api, QuoteResult } from "@/lib/api";
 import { formatPrice } from "@/lib/price";
+import LoginModal from "@/components/LoginModal";
 
 type Step = "shipping" | "review";
 
@@ -31,6 +32,10 @@ export default function CheckoutView() {
   const [loading, setLoading] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // True when the failure was an auth error (e.g. guest checkout blocked),
+  // so we can offer a login link alongside the message.
+  const [authError, setAuthError] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const [quote, setQuote] = useState<QuoteResult | null>(null);
 
   // Shipping form
@@ -129,6 +134,7 @@ export default function CheckoutView() {
   // only follow the checkout URL the server returns.
   const handlePlaceOrder = async () => {
     setError(null);
+    setAuthError(false);
     setPlacing(true);
 
     try {
@@ -174,8 +180,14 @@ export default function CheckoutView() {
       // redirects the customer back to the callback URL above.
       window.location.href = pay.data.checkoutUrl;
     } catch (err: unknown) {
-      const msg = (err as { message?: string | string[] })?.message;
-      setError(Array.isArray(msg) ? msg[0] : msg || "Failed to place order");
+      const e = err as { message?: string | string[]; status?: number };
+      const msg = Array.isArray(e?.message) ? e.message[0] : e?.message;
+      // A 401, or an "Unauthorized" message, means the session isn't valid —
+      // surface a login link instead of a dead-end error.
+      const isAuth =
+        e?.status === 401 || /unauthorized/i.test(String(msg ?? ""));
+      setAuthError(isAuth);
+      setError(msg || "Failed to place order");
       setPlacing(false);
     }
   };
@@ -186,6 +198,17 @@ export default function CheckoutView() {
 
   return (
     <div className="content-grid py-8 md:py-12">
+      <LoginModal
+        open={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onSuccess={() => {
+          // Auth refreshed in place — clear the auth error and resume the
+          // checkout the customer was on. Cart and form state are intact.
+          setAuthError(false);
+          setError(null);
+          void handlePlaceOrder();
+        }}
+      />
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-display font-bold text-ink-900">Checkout</h1>
         {/* Steps indicator */}
@@ -213,8 +236,23 @@ export default function CheckoutView() {
 
       {error && (
         <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 text-red-700 text-sm font-medium mb-6">
-          <AlertCircle size={16} />
-          {error}
+          <AlertCircle size={16} className="shrink-0" />
+          <span>
+            {error}
+            {authError && (
+              <>
+                {". "}Please{" "}
+                <button
+                  type="button"
+                  onClick={() => setLoginOpen(true)}
+                  className="underline font-semibold hover:text-red-800"
+                >
+                  click login
+                </button>{" "}
+                to continue.
+              </>
+            )}
+          </span>
         </div>
       )}
 
@@ -259,8 +297,10 @@ export default function CheckoutView() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-ink-700 mb-1.5">Address Line 1 *</label>
-                    <input type="text" value={line1} onChange={(e) => setLine1(e.target.value)} required placeholder="123 Victoria Island" className={inputCls} />
+                    <label className="block text-xs font-semibold text-ink-700 mb-1.5">
+                      Address Line 1 {shippingOptOut ? "" : "*"}
+                    </label>
+                    <input type="text" value={line1} onChange={(e) => setLine1(e.target.value)} required={!shippingOptOut} placeholder="123 Victoria Island" className={inputCls} />
                   </div>
 
                   <div>
@@ -270,8 +310,10 @@ export default function CheckoutView() {
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-ink-700 mb-1.5">City *</label>
-                      <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="Lagos" className={inputCls} />
+                      <label className="block text-xs font-semibold text-ink-700 mb-1.5">
+                        City {shippingOptOut ? "" : "*"}
+                      </label>
+                      <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required={!shippingOptOut} placeholder="Lagos" className={inputCls} />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-ink-700 mb-1.5">State *</label>
