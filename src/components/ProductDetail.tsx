@@ -9,6 +9,7 @@ import {
   Minus,
   Plus,
   ChevronRight,
+  ChevronLeft,
   Truck,
   Shield,
   RotateCcw,
@@ -66,6 +67,8 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
   const imageBoxRef = useRef<HTMLDivElement>(null);
   const [isZooming, setIsZooming] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
+  // Touch-swipe state for the image gallery on touch devices.
+  const touchStartX = useRef<number | null>(null);
 
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
@@ -273,13 +276,27 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
       <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
         {/* Left: Images */}
         <div>
-          {/* Main image with hover zoom */}
+          {/* Main image with hover zoom + touch swipe */}
           <div
             ref={imageBoxRef}
             onMouseEnter={() => hasImage && setIsZooming(true)}
             onMouseLeave={() => setIsZooming(false)}
             onMouseMove={hasImage ? handleZoomMove : undefined}
-            className="relative aspect-square rounded-xl overflow-hidden bg-surface-2 mb-4 cursor-zoom-in"
+            onTouchStart={(e) => {
+              touchStartX.current = e.touches[0]?.clientX ?? null;
+            }}
+            onTouchEnd={(e) => {
+              if (touchStartX.current === null || displayMedia.length < 2) return;
+              const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX.current;
+              touchStartX.current = null;
+              if (Math.abs(dx) < 40) return; // ignore taps / tiny drags
+              setSelectedImage((i) =>
+                dx < 0
+                  ? Math.min(displayMedia.length - 1, i + 1) // swipe left → next
+                  : Math.max(0, i - 1), // swipe right → prev
+              );
+            }}
+            className="group relative aspect-square rounded-xl overflow-hidden bg-surface-2 mb-4 cursor-zoom-in select-none"
           >
             {hasImage ? (
               <Image
@@ -302,6 +319,51 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
               <div className="absolute inset-0 flex items-center justify-center text-ink-300">
                 <ShoppingBag size={64} />
               </div>
+            )}
+
+            {/* Multi-image controls: arrows (desktop hover) + swipe hint
+                (touch) + dot count. Only when the gallery has >1 image. */}
+            {displayMedia.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  aria-label="Previous image"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImage((i) => Math.max(0, i - 1));
+                  }}
+                  className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-white/80 text-ink-700 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white disabled:opacity-0"
+                  disabled={selectedImage === 0}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next image"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImage((i) =>
+                      Math.min(displayMedia.length - 1, i + 1),
+                    );
+                  }}
+                  className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-white/80 text-ink-700 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white disabled:opacity-0"
+                  disabled={selectedImage === displayMedia.length - 1}
+                >
+                  <ChevronRight size={18} />
+                </button>
+
+                {/* Swipe hint — shown on touch screens (md:hidden). */}
+                <div className="md:hidden absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ink-900/70 text-white text-[11px] font-medium backdrop-blur-sm">
+                  <ChevronLeft size={12} className="animate-pulse" />
+                  Swipe for more
+                  <ChevronRight size={12} className="animate-pulse" />
+                </div>
+
+                {/* Position dots */}
+                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-ink-900/60 text-white text-[10px] font-medium">
+                  {selectedImage + 1}/{displayMedia.length}
+                </div>
+              </>
             )}
           </div>
 
