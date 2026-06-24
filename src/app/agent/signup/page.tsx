@@ -74,9 +74,7 @@ export default function AgentSignupPage() {
         setError(res.data.error);
       }
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Could not verify account",
-      );
+      setError(extractApiMessage(e) ?? "Could not verify account");
     } finally {
       setVerifyingBank(false);
     }
@@ -108,9 +106,7 @@ export default function AgentSignupPage() {
       });
       setDone({ code: res.data.code });
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not submit application",
-      );
+      setError(extractApiMessage(err) ?? "Could not submit application");
     } finally {
       setBusy(false);
     }
@@ -339,4 +335,15 @@ function FormField({
       {children}
     </div>
   );
+}
+
+/** See agent/login/page.tsx — surfaces the server's real error message. */
+function extractApiMessage(err: unknown): string | null {
+  if (typeof err === "string") return err;
+  if (err && typeof err === "object" && "message" in err) {
+    const m = (err as { message?: unknown }).message;
+    if (Array.isArray(m)) return m.filter(Boolean).join(", ") || null;
+    if (typeof m === "string") return m || null;
+  }
+  return null;
 }

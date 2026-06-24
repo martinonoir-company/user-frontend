@@ -109,6 +109,16 @@ export default function Hero() {
             </Link>
           </div>
 
+          {/* Marketing-agent entry point */}
+          <div className="mt-5">
+            <Link
+              href="/agent/login"
+              className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-accent-gold transition-colors duration-standard underline-offset-4 hover:underline"
+            >
+              Marketing agent? Sign in to your dashboard →
+            </Link>
+          </div>
+
           {/* Trust badges */}
           <div
             className={`mt-12 flex items-center gap-6 transition-all duration-[1000ms] ease-enter ${

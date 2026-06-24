@@ -22,9 +22,7 @@ export default function AgentLoginPage() {
       await login(email.trim(), password);
       router.replace("/agent/dashboard");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not sign you in",
-      );
+      setError(extractApiMessage(err) ?? "Could not sign you in");
     } finally {
       setBusy(false);
     }
@@ -105,4 +103,21 @@ export default function AgentLoginPage() {
       </div>
     </div>
   );
+}
+
+/**
+ * Pull a human-readable message off whatever the API client throws. The
+ * storefront request() helper throws a plain ApiError object (not an
+ * Error instance), so `err instanceof Error` misses it. The server's
+ * BadRequest/Unauthorized message lives on `.message` (sometimes an
+ * array). This surfaces it so the agent sees the real reason.
+ */
+function extractApiMessage(err: unknown): string | null {
+  if (typeof err === "string") return err;
+  if (err && typeof err === "object" && "message" in err) {
+    const m = (err as { message?: unknown }).message;
+    if (Array.isArray(m)) return m.filter(Boolean).join(", ") || null;
+    if (typeof m === "string") return m || null;
+  }
+  return null;
 }
