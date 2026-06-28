@@ -427,7 +427,9 @@ class ApiClient {
   // ── Inventory ──
 
   async getStockLevel(variantId: string) {
-    return this.request<{ data: StockLevel }>(`/inventory/levels/${variantId}`);
+    // data is null when the variant has no stock-level row at the warehouse
+    // (i.e. nothing on hand) — callers must treat null as out of stock.
+    return this.request<{ data: StockLevel | null }>(`/inventory/levels/${variantId}`);
   }
 
   // ── Categories ──

@@ -188,8 +188,21 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
       .getStockLevel(selectedVariant.id)
       .then((res) => {
         if (cancelled) return;
-        const level: StockLevel = res.data;
-        const available = Math.max(0, level.onHand - level.reserved);
+        const level: StockLevel | null = res.data;
+        // No stock-level row means the warehouse has none of this variant —
+        // treat it as out of stock, NOT "unknown". Guard against missing /
+        // non-numeric figures the same way so a tracked variant can never
+        // fall through to an "in stock" state it isn't in.
+        const onHand = Number(level?.onHand);
+        const reserved = Number(level?.reserved);
+        if (!level || !Number.isFinite(onHand)) {
+          setStock({ status: "out_of_stock" });
+          return;
+        }
+        const available = Math.max(
+          0,
+          onHand - (Number.isFinite(reserved) ? reserved : 0),
+        );
         if (available <= 0) setStock({ status: "out_of_stock" });
         else if (available <= LOW_STOCK_THRESHOLD)
           setStock({ status: "low_stock", available });
@@ -695,7 +708,7 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
               {!hasBuyableVariant
                 ? "Unavailable"
                 : outOfStock
-                  ? "Out of Stock"
+                  ? "Out of stock: restocking"
                   : addedFeedback
                     ? "Added to Cart ✓"
                     : "Add to Cart"}
