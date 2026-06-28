@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/price";
 import { useState } from "react";
 import { api, QuoteResult } from "@/lib/api";
+import { MIN_WHOLESALE_QTY } from "@/lib/wholesale";
 
 export default function CartView() {
   const { items, itemCount, updateQuantity, removeItem, clearCart, getSubtotal, syncing } = useCart();
@@ -89,7 +90,7 @@ export default function CartView() {
         <div className="lg:col-span-2 space-y-0">
           {items.map((item, i) => (
             <div
-              key={item.variantId}
+              key={`${item.variantId}:${item.isWholesale ? "W" : "R"}`}
               className={`flex gap-4 py-6 ${
                 i > 0 ? "border-t border-ink-100" : ""
               }`}
@@ -122,6 +123,11 @@ export default function CartView() {
                 </Link>
                 <p className="text-xs text-ink-500 mt-0.5">{item.variantName}</p>
                 <p className="text-xs text-ink-400 mt-0.5">SKU: {item.sku}</p>
+                {item.isWholesale && (
+                  <span className="mt-1 inline-flex items-center rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+                    Wholesale
+                  </span>
+                )}
 
                 {item.unavailable && (
                   <p className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-red-600">
@@ -146,8 +152,19 @@ export default function CartView() {
                   {/* Quantity */}
                   <div className="inline-flex items-center border border-ink-200 rounded-lg">
                     <button
-                      onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                      className="w-8 h-8 flex items-center justify-center text-ink-600 hover:bg-surface-1 transition-colors rounded-l-lg"
+                      onClick={() =>
+                        updateQuantity(
+                          item.variantId,
+                          item.quantity - 1,
+                          item.isWholesale,
+                        )
+                      }
+                      // A wholesale line can't drop below the minimum — remove
+                      // it instead if you no longer want a bulk order.
+                      disabled={
+                        item.isWholesale && item.quantity <= MIN_WHOLESALE_QTY
+                      }
+                      className="w-8 h-8 flex items-center justify-center text-ink-600 hover:bg-surface-1 transition-colors rounded-l-lg disabled:opacity-40 disabled:cursor-not-allowed"
                       aria-label="Decrease quantity"
                     >
                       <Minus size={14} />
@@ -156,7 +173,13 @@ export default function CartView() {
                       {item.quantity}
                     </span>
                     <button
-                      onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                      onClick={() =>
+                        updateQuantity(
+                          item.variantId,
+                          item.quantity + 1,
+                          item.isWholesale,
+                        )
+                      }
                       className="w-8 h-8 flex items-center justify-center text-ink-600 hover:bg-surface-1 transition-colors rounded-r-lg"
                       aria-label="Increase quantity"
                     >
@@ -173,7 +196,7 @@ export default function CartView() {
                       )}
                     </p>
                     <button
-                      onClick={() => removeItem(item.variantId)}
+                      onClick={() => removeItem(item.variantId, item.isWholesale)}
                       className="w-8 h-8 flex items-center justify-center text-ink-400 hover:text-red-500 transition-colors"
                       aria-label="Remove item"
                     >

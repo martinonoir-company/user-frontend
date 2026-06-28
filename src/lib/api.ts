@@ -500,22 +500,26 @@ class ApiClient {
     return this.request<{ data: { count: number } }>('/cart/count');
   }
 
-  async addToCart(variantId: string, quantity: number) {
+  async addToCart(variantId: string, quantity: number, isWholesale = false) {
     return this.request<{ data: ServerCartItem }>('/cart', {
       method: 'POST',
-      body: JSON.stringify({ variantId, quantity }),
+      body: JSON.stringify({ variantId, quantity, isWholesale }),
     });
   }
 
-  async updateCartQuantity(variantId: string, quantity: number) {
+  // isWholesale is accepted for API symmetry; the server cart endpoints key
+  // by variantId, so wholesale lines are primarily carried to checkout via
+  // the per-item wholesale flag.
+  async updateCartQuantity(variantId: string, quantity: number, isWholesale = false) {
     return this.request<{ data: ServerCartItem | null }>(`/cart/${variantId}`, {
       method: 'PATCH',
-      body: JSON.stringify({ quantity }),
+      body: JSON.stringify({ quantity, isWholesale }),
     });
   }
 
-  async removeFromCart(variantId: string) {
-    return this.request<{ message: string }>(`/cart/${variantId}`, {
+  async removeFromCart(variantId: string, isWholesale = false) {
+    const qs = isWholesale ? '?isWholesale=true' : '';
+    return this.request<{ message: string }>(`/cart/${variantId}${qs}`, {
       method: 'DELETE',
     });
   }
@@ -697,7 +701,7 @@ export interface QuoteResult {
 }
 
 export interface CheckoutInput {
-  items: Array<{ variantId: string; quantity: number }>;
+  items: Array<{ variantId: string; quantity: number; wholesale?: boolean }>;
   shippingAddress: {
     firstName: string;
     lastName: string;
@@ -862,6 +866,7 @@ export interface ServerCartItem {
   unavailable: boolean;
   options: Record<string, string> | null;
   imageUrl: string | null;
+  isWholesale?: boolean;
   createdAt: string;
   updatedAt: string;
 }

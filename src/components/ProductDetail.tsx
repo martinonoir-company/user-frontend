@@ -23,6 +23,7 @@ import { api, Product, ProductVariant, StockLevel, VariantPromotion } from "@/li
 import { getVariantPrice, formatPrice } from "@/lib/price";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
+import { MIN_WHOLESALE_QTY } from "@/lib/wholesale";
 
 interface Props {
   slug: string;
@@ -74,6 +75,9 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
     pickDefaultVariant(initialProduct),
   );
   const [quantity, setQuantity] = useState(1);
+  // Wholesale mode for this PDP session. When on, the line is priced at the
+  // variant's wholesale price and the quantity must be ≥ MIN_WHOLESALE_QTY.
+  const [isWholesaleMode, setIsWholesaleMode] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [addedFeedback, setAddedFeedback] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -203,6 +207,8 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return;
     if (stock.status === "out_of_stock") return;
+    // Block under-quantity wholesale adds (the button is also disabled).
+    if (isWholesaleMode && quantity < MIN_WHOLESALE_QTY) return;
 
     // Cart thumbnail: prefer an image tagged to the selected variant so
     // the cart / checkout shows what the customer actually picked. Fall
@@ -213,6 +219,16 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
         (m) => m.variantId === selectedVariant.id,
       )?.url ?? product.media?.find((m) => !m.variantId)?.url ?? product.media?.[0]?.url;
 
+    // Wholesale lines carry the wholesale price as the line price so the
+    // cart, quote, and totals all reflect it; the server re-derives the
+    // authoritative price at checkout from the wholesale flag.
+    const priceNgn = isWholesaleMode
+      ? parseInt(selectedVariant.wholesalePriceNgn, 10)
+      : parseInt(selectedVariant.retailPriceNgn, 10);
+    const priceUsd = isWholesaleMode
+      ? parseInt(selectedVariant.wholesalePriceUsd, 10)
+      : parseInt(selectedVariant.retailPriceUsd, 10);
+
     addItem(
       {
         variantId: selectedVariant.id,
@@ -221,10 +237,11 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
         productSlug: product.slug,
         variantName: selectedVariant.name,
         sku: selectedVariant.sku,
-        priceNgn: parseInt(selectedVariant.retailPriceNgn, 10),
-        priceUsd: parseInt(selectedVariant.retailPriceUsd, 10),
+        priceNgn,
+        priceUsd,
         options: selectedVariant.options ?? {},
         imageUrl: variantImage,
+        isWholesale: isWholesaleMode,
       },
       quantity,
     );
@@ -307,7 +324,9 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
   // accept it into a cart. Reflect that honestly instead of showing a dead
   // "Add to Cart" button that silently does nothing.
   const hasBuyableVariant = !!selectedVariant;
-  const canAddToCart = hasBuyableVariant && !outOfStock;
+  // Wholesale lines must meet the minimum quantity before they can be added.
+  const wholesaleQtyOk = !isWholesaleMode || quantity >= MIN_WHOLESALE_QTY;
+  const canAddToCart = hasBuyableVariant && !outOfStock && wholesaleQtyOk;
 
   return (
     <div className="content-grid py-8 md:py-12">
@@ -553,10 +572,82 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
             );
           })()}
 
+          {/* Wholesale toggle — bold button-style checkbox */}
+          {hasBuyableVariant && (
+            <div className="mb-5">
+              <button
+                type="button"
+                onClick={() =>
+                  setIsWholesaleMode((on) => {
+                    const next = !on;
+                    // Entering wholesale: jump straight to the minimum so the
+                    // line is immediately valid. Leaving: drop back to 1.
+                    setQuantity(next ? MIN_WHOLESALE_QTY : 1);
+                    return next;
+                  })
+                }
+                aria-pressed={isWholesaleMode}
+                className={`w-full flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all duration-standard ${
+                  isWholesaleMode
+                    ? "border-amber-500 bg-amber-50"
+                    : "border-ink-200 hover:border-amber-400 hover:bg-amber-50/40"
+                }`}
+              >
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 ${
+                    isWholesaleMode
+                      ? "border-amber-600 bg-amber-600 text-white"
+                      : "border-ink-300"
+                  }`}
+                >
+                  {isWholesaleMode && <CheckCircle2 size={14} />}
+                </span>
+                <span className="flex flex-col">
+                  <span className="text-sm font-bold text-ink-900">
+                    Buy wholesale
+                  </span>
+                  <span className="text-xs text-ink-500">
+                    Wholesale pricing for bulk purchases
+                  </span>
+                </span>
+              </button>
+              {isWholesaleMode && (
+                <div className="mt-2 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                  <AlertCircle size={14} className="mt-0.5 shrink-0 text-amber-600" />
+                  <p className="text-xs text-amber-800">
+                    Minimum order quantity for wholesale is{" "}
+                    <span className="font-bold">{MIN_WHOLESALE_QTY}</span>. Enter
+                    the quantity you want below.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Quantity — hidden when the product can't be purchased */}
           {hasBuyableVariant && (
           <div className="mb-6">
             <label className="text-sm font-medium text-ink-700 mb-2 block">Quantity</label>
+            {isWholesaleMode ? (
+              <div>
+                <input
+                  type="number"
+                  min={MIN_WHOLESALE_QTY}
+                  value={quantity}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value, 10);
+                    setQuantity(Number.isFinite(n) ? Math.max(1, n) : 1);
+                  }}
+                  className="w-32 px-3 py-2.5 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                  aria-label="Wholesale quantity"
+                />
+                {quantity < MIN_WHOLESALE_QTY && (
+                  <p className="mt-1 text-xs text-red-600">
+                    Enter at least {MIN_WHOLESALE_QTY} to add a wholesale order.
+                  </p>
+                )}
+              </div>
+            ) : (
             <div className="inline-flex items-center border border-ink-200 rounded-lg">
               <button
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -582,6 +673,7 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
                 <Plus size={16} />
               </button>
             </div>
+            )}
           </div>
           )}
 

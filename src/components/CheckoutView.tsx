@@ -139,7 +139,11 @@ export default function CheckoutView() {
 
     try {
       const res = await api.checkout({
-        items: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
+        items: items.map((i) => ({
+          variantId: i.variantId,
+          quantity: i.quantity,
+          wholesale: i.isWholesale,
+        })),
         shippingAddress: {
           firstName,
           lastName,
@@ -498,7 +502,14 @@ export default function CheckoutView() {
         {/* Order summary sidebar */}
         <div className="lg:sticky lg:top-32 self-start">
           <div className="bg-surface-0 border border-ink-100 rounded-xl p-6">
-            <h3 className="text-sm font-semibold text-ink-900 mb-4">Order Summary</h3>
+            <h3 className="text-sm font-semibold text-ink-900 mb-4 flex items-center gap-2">
+              Order Summary
+              {items.some((i) => i.isWholesale) && (
+                <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+                  Wholesale
+                </span>
+              )}
+            </h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-ink-600">
                 <span>Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} items)</span>
