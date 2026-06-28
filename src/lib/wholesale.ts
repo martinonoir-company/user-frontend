@@ -1,7 +1,58 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+
 /**
- * Minimum quantity for a wholesale line. Mirrors the server constant
- * (server/src/shared/constants/wholesale.ts). The server is the authority —
- * it re-validates this at checkout — but the storefront enforces it in the
- * UI so the customer can't add an under-quantity wholesale line.
+ * Default minimum wholesale quantity, used as the instant fallback before the
+ * server config loads (and if it fails). The authoritative value is set by
+ * the super admin and fetched via useWholesaleMinQty(); the server also
+ * re-validates at checkout.
  */
-export const MIN_WHOLESALE_QTY = 20;
+export const DEFAULT_WHOLESALE_MIN_QTY = 20;
+
+/** @deprecated Prefer useWholesaleMinQty(). Kept for the fallback default. */
+export const MIN_WHOLESALE_QTY = DEFAULT_WHOLESALE_MIN_QTY;
+
+// Module-level cache so every component shares one fetch for the session.
+let cached: number | null = null;
+let inFlight: Promise<number> | null = null;
+
+async function fetchMinQty(): Promise<number> {
+  if (cached != null) return cached;
+  if (!inFlight) {
+    inFlight = api
+      .getPublicConfig()
+      .then((res) => {
+        const n = Number(res.data?.wholesaleMinQty);
+        cached = Number.isFinite(n) && n >= 1 ? Math.floor(n) : DEFAULT_WHOLESALE_MIN_QTY;
+        return cached;
+      })
+      .catch(() => {
+        cached = DEFAULT_WHOLESALE_MIN_QTY;
+        return cached;
+      })
+      .finally(() => {
+        inFlight = null;
+      });
+  }
+  return inFlight;
+}
+
+/**
+ * The admin-configured wholesale minimum quantity. Returns the default
+ * immediately, then updates once the server config resolves.
+ */
+export function useWholesaleMinQty(): number {
+  const [qty, setQty] = useState<number>(cached ?? DEFAULT_WHOLESALE_MIN_QTY);
+  useEffect(() => {
+    let active = true;
+    void fetchMinQty().then((n) => {
+      if (active) setQty(n);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  return qty;
+}

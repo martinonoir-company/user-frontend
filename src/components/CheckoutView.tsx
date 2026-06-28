@@ -511,10 +511,48 @@ export default function CheckoutView() {
               )}
             </h3>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-ink-600">
-                <span>Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} items)</span>
-                <span>{formatPrice(String(quote?.subtotal ?? subtotal), cur)}</span>
-              </div>
+              {(() => {
+                const hasWholesale = items.some((i) => i.isWholesale);
+                // Effective subtotal (what's actually charged — wholesale price
+                // for wholesale lines). Prefer the server quote when present.
+                const effectiveSubtotal = quote?.subtotal ?? subtotal;
+                // Retail subtotal: every line at its retail price.
+                const retailSubtotal = items.reduce((s, i) => {
+                  const retail =
+                    (cur === "USD" ? i.retailPriceUsd : i.retailPriceNgn) ??
+                    (cur === "USD" ? i.priceUsd : i.priceNgn);
+                  return s + retail * i.quantity;
+                }, 0);
+                const itemCount = items.reduce((s, i) => s + i.quantity, 0);
+                // Only show the strike-through when wholesale actually saves
+                // money vs retail (avoids a confusing equal/struck line).
+                const showWholesale =
+                  hasWholesale && retailSubtotal > effectiveSubtotal;
+                return showWholesale ? (
+                  <>
+                    <div className="flex justify-between text-ink-400">
+                      <span>Subtotal ({itemCount} items)</span>
+                      <span className="line-through">
+                        {formatPrice(String(retailSubtotal), cur)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-ink-900 font-medium">
+                      <span className="flex items-center gap-1.5">
+                        Wholesale subtotal
+                        <span className="inline-flex items-center rounded bg-amber-100 text-amber-800 px-1.5 py-0.5 text-[10px] font-bold uppercase">
+                          Wholesale
+                        </span>
+                      </span>
+                      <span>{formatPrice(String(effectiveSubtotal), cur)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between text-ink-600">
+                    <span>Subtotal ({itemCount} items)</span>
+                    <span>{formatPrice(String(effectiveSubtotal), cur)}</span>
+                  </div>
+                );
+              })()}
               {quote && (
                 <>
                   {quote.discountTotal > 0 && (

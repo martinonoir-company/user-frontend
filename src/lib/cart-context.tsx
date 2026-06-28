@@ -20,9 +20,19 @@ export interface CartItem {
   variantName: string;
   sku: string;
   quantity: number;
-  /** Snapshot price at add-time (minor units). */
+  /**
+   * Effective unit price at add-time (minor units) — wholesale price for a
+   * wholesale line, retail otherwise. This is what totals/quote use.
+   */
   priceNgn: number;
   priceUsd: number;
+  /**
+   * The variant's RETAIL unit price (minor units), kept alongside the
+   * effective price so the checkout can show the struck-through retail
+   * subtotal for wholesale lines. Equals priceNgn/priceUsd for retail lines.
+   */
+  retailPriceNgn?: number;
+  retailPriceUsd?: number;
   /** Live price from the DB. `null` on guest cart or when the variant is gone. */
   currentPriceNgn: number | null;
   currentPriceUsd: number | null;
@@ -101,6 +111,8 @@ function loadGuestCart(): CartItem[] {
         quantity: Number(r.quantity ?? 1),
         priceNgn: Number(r.priceNgn ?? 0),
         priceUsd: Number(r.priceUsd ?? 0),
+        retailPriceNgn: r.retailPriceNgn ?? undefined,
+        retailPriceUsd: r.retailPriceUsd ?? undefined,
         currentPriceNgn: r.currentPriceNgn ?? null,
         currentPriceUsd: r.currentPriceUsd ?? null,
         priceChanged: Boolean(r.priceChanged ?? false),

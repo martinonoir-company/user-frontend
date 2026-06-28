@@ -7,10 +7,11 @@ import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/price";
 import { useState } from "react";
 import { api, QuoteResult } from "@/lib/api";
-import { MIN_WHOLESALE_QTY } from "@/lib/wholesale";
+import { useWholesaleMinQty } from "@/lib/wholesale";
 
 export default function CartView() {
   const { items, itemCount, updateQuantity, removeItem, clearCart, getSubtotal, syncing } = useCart();
+  const MIN_WHOLESALE_QTY = useWholesaleMinQty();
   const [quote, setQuote] = useState<QuoteResult | null>(null);
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [couponCode, setCouponCode] = useState("");

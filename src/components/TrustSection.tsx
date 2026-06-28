@@ -7,6 +7,7 @@ import {
   CreditCard,
   ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
 import { useRef } from "react";
 import { useInView } from "@/hooks/useInView";
 
@@ -14,7 +15,7 @@ const features = [
   {
     icon: Truck,
     title: "Free Shipping",
-    description: "Complimentary shipping on orders above ₦150,000. Worldwide delivery available.",
+    description: "Shipping available. Worldwide delivery coverage.",
   },
   {
     icon: Shield,
@@ -23,13 +24,13 @@ const features = [
   },
   {
     icon: RefreshCcw,
-    title: "30-Day Returns",
-    description: "Not satisfied? Return any item within 30 days for a full refund, no questions asked.",
+    title: "3-Day Returns",
+    description: "Not satisfied? Return any item within 3 days for a full refund, no questions asked.",
   },
   {
     icon: CreditCard,
     title: "Secure Payments",
-    description: "Pay with Paystack, Moniepoint, or Stripe. Every transaction is encrypted and protected.",
+    description: "Pay with Paystack, Moniepoint (Walk-in Customers). Every transaction is encrypted and protected.",
   },
 ];
 
@@ -111,24 +112,18 @@ export default function TrustSection() {
                 style inspiration. Join 12,000+ discerning shoppers.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 lg:min-w-[380px]">
-              <input
-                type="email"
-                id="newsletter-email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3.5 bg-white/10 backdrop-blur-sm border border-white/10 rounded-md text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold/50 focus:border-accent-gold/50 transition-all duration-micro"
-                aria-label="Email for newsletter"
-              />
-              <button
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/register"
                 id="newsletter-submit"
-                className="group px-6 py-3.5 bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm rounded-md transition-all duration-standard hover:shadow-lg flex items-center justify-center gap-2 whitespace-nowrap"
+                className="group px-8 py-3.5 bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm rounded-md transition-all duration-standard hover:shadow-lg flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                Subscribe
+                Start shopping
                 <ArrowRight
                   size={14}
                   className="transition-transform duration-standard group-hover:translate-x-1"
                 />
-              </button>
+              </Link>
             </div>
           </div>
         </div>

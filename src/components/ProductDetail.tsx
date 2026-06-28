@@ -23,7 +23,7 @@ import { api, Product, ProductVariant, StockLevel, VariantPromotion } from "@/li
 import { getVariantPrice, formatPrice } from "@/lib/price";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
-import { MIN_WHOLESALE_QTY } from "@/lib/wholesale";
+import { useWholesaleMinQty } from "@/lib/wholesale";
 
 interface Props {
   slug: string;
@@ -83,6 +83,8 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [stock, setStock] = useState<StockState>({ status: "loading" });
+  // Admin-configured wholesale minimum order quantity.
+  const MIN_WHOLESALE_QTY = useWholesaleMinQty();
   // Live promotional discounts keyed by variantId, for the "X% off" badge.
   const [promotions, setPromotions] = useState<Record<string, VariantPromotion>>(
     {},
@@ -252,6 +254,10 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
         sku: selectedVariant.sku,
         priceNgn,
         priceUsd,
+        // Always keep the retail price so checkout can show the struck-through
+        // retail subtotal for wholesale lines.
+        retailPriceNgn: parseInt(selectedVariant.retailPriceNgn, 10),
+        retailPriceUsd: parseInt(selectedVariant.retailPriceUsd, 10),
         options: selectedVariant.options ?? {},
         imageUrl: variantImage,
         isWholesale: isWholesaleMode,

@@ -142,6 +142,13 @@ class ApiClient {
     return this.request<{ data: Product }>(`/products/slug/${slug}`);
   }
 
+  /** Public store config (e.g. wholesale minimum quantity). */
+  async getPublicConfig() {
+    return this.request<{ data: { wholesaleMinQty: number } }>(
+      `/settings/public`,
+    );
+  }
+
   async getProductById(id: string) {
     return this.request<{ data: Product }>(`/products/${id}`);
   }
