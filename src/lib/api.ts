@@ -876,6 +876,8 @@ export interface ServerCartItem {
   options: Record<string, string> | null;
   imageUrl: string | null;
   isWholesale?: boolean;
+  retailPriceNgn?: number;
+  retailPriceUsd?: number;
   createdAt: string;
   updatedAt: string;
 }
