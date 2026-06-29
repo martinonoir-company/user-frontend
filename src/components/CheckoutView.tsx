@@ -516,10 +516,14 @@ export default function CheckoutView() {
                 // Effective subtotal (what's actually charged — wholesale price
                 // for wholesale lines). Prefer the server quote when present.
                 const effectiveSubtotal = quote?.subtotal ?? subtotal;
-                // Retail subtotal: every line at its retail price.
+                // Retail subtotal: every line at its retail price. Prefer the
+                // explicit retail snapshot; fall back to the live retail price
+                // (currentPrice*, which the server sets to retail), then the
+                // effective price as a last resort.
                 const retailSubtotal = items.reduce((s, i) => {
                   const retail =
                     (cur === "USD" ? i.retailPriceUsd : i.retailPriceNgn) ??
+                    (cur === "USD" ? i.currentPriceUsd : i.currentPriceNgn) ??
                     (cur === "USD" ? i.priceUsd : i.priceNgn);
                   return s + retail * i.quantity;
                 }, 0);
