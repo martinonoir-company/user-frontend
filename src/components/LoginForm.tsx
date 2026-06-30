@@ -2,12 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
+/** Return target after auth: ?redirect= (middleware) or ?next= (links). */
+function safeReturnTo(sp: URLSearchParams | null): string {
+  const raw = sp?.get("redirect") ?? sp?.get("next");
+  // Only allow same-origin app paths to avoid open-redirects.
+  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/account";
+}
+
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +29,7 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push("/account");
+      router.push(safeReturnTo(searchParams));
     } catch (err: unknown) {
       const msg = (err as { message?: string | string[] })?.message;
       setError(Array.isArray(msg) ? msg[0] : msg || "Invalid email or password");

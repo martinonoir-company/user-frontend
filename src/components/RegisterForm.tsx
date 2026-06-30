@@ -2,9 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, User, Globe, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+
+/** Return target after auth: ?redirect= (middleware) or ?next= (links). */
+function safeReturnTo(sp: URLSearchParams | null): string {
+  const raw = sp?.get("redirect") ?? sp?.get("next");
+  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/account";
+}
 
 const COUNTRIES = [
   { code: "NG", name: "Nigeria" },
@@ -19,6 +25,7 @@ const COUNTRIES = [
 
 export default function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { register } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -46,7 +53,7 @@ export default function RegisterForm() {
     setLoading(true);
     try {
       await register({ firstName, lastName, email, password, countryCode });
-      router.push("/account");
+      router.push(safeReturnTo(searchParams));
     } catch (err: unknown) {
       const msg = (err as { message?: string | string[] })?.message;
       setError(Array.isArray(msg) ? msg[0] : msg || "Registration failed");
