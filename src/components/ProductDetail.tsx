@@ -649,17 +649,43 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
             <label className="text-sm font-medium text-ink-700 mb-2 block">Quantity</label>
             {isWholesaleMode ? (
               <div>
-                <input
-                  type="number"
-                  min={MIN_WHOLESALE_QTY}
-                  value={quantity}
-                  onChange={(e) => {
-                    const n = parseInt(e.target.value, 10);
-                    setQuantity(Number.isFinite(n) ? Math.max(1, n) : 1);
-                  }}
-                  className="w-32 px-3 py-2.5 border border-ink-200 rounded-lg text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
-                  aria-label="Wholesale quantity"
-                />
+                {/* Explicit -/+ stepper plus a typable field. The native
+                    number-input spinners are hidden on mobile browsers, so
+                    the buttons are the reliable way to change the quantity
+                    on touch devices. */}
+                <div className="inline-flex items-center border border-ink-200 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setQuantity((q) => Math.max(MIN_WHOLESALE_QTY, q - 1))
+                    }
+                    className="w-10 h-10 flex items-center justify-center text-ink-600 hover:bg-surface-1 transition-colors rounded-l-lg disabled:opacity-40"
+                    aria-label="Decrease quantity"
+                    disabled={quantity <= MIN_WHOLESALE_QTY}
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={MIN_WHOLESALE_QTY}
+                    value={quantity}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value, 10);
+                      setQuantity(Number.isFinite(n) ? Math.max(1, n) : 1);
+                    }}
+                    className="w-16 h-10 text-center text-sm font-semibold text-ink-900 border-x border-ink-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                    aria-label="Wholesale quantity"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="w-10 h-10 flex items-center justify-center text-ink-600 hover:bg-surface-1 transition-colors rounded-r-lg"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
                 {quantity < MIN_WHOLESALE_QTY && (
                   <p className="mt-1 text-xs text-red-600">
                     Enter at least {MIN_WHOLESALE_QTY} to add a wholesale order.
