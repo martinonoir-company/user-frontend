@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
-import { CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
+import { CheckCircle2, AlertCircle, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface Bank {
@@ -16,6 +16,7 @@ export default function AgentSignupPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [verifyingBank, setVerifyingBank] = useState(false);
@@ -216,15 +217,27 @@ export default function AgentSignupPage() {
             </FormField>
 
             <FormField label="Password">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-                minLength={8}
-                className={INPUT}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                  minLength={8}
+                  className={`${INPUT.replace("px-3", "pl-3 pr-10")}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-600"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
               <p className="text-[11px] text-ink-400 mt-1">
                 At least 8 characters.
               </p>

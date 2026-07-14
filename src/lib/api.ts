@@ -258,6 +258,31 @@ class ApiClient {
     });
   }
 
+  /**
+   * Agent password reset. Deliberately hits /agents/* rather than /auth/*:
+   * the server scopes these to MARKETING_AGENT accounts, mails a link to
+   * /agent/reset-password, and refuses tokens minted by the customer flow.
+   */
+  async agentForgotPassword(email: string) {
+    return this.request<{ data: { message: string } }>(
+      '/agents/forgot-password',
+      {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      },
+    );
+  }
+
+  async agentResetPassword(token: string, newPassword: string) {
+    return this.request<{ data: { message: string } }>(
+      '/agents/reset-password',
+      {
+        method: 'POST',
+        body: JSON.stringify({ token, newPassword }),
+      },
+    );
+  }
+
   async getAgentDashboard() {
     return this.request<{ data: AgentDashboardView }>('/agents/me/dashboard');
   }
