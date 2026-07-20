@@ -69,7 +69,7 @@ export default function TrackOrderPage() {
     setNotFound(false);
     setResult(null);
     try {
-      const res = await api.trackByOrderNumber(orderNumber.trim());
+      const res = await api.trackByOrderNumber(orderNumber.trim(), email.trim());
       setResult(res.data);
     } catch {
       setNotFound(true);

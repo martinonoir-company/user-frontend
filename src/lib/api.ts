@@ -382,10 +382,14 @@ class ApiClient {
     );
   }
 
-  /** Public tracking by order number — for the /track-order page. */
-  async trackByOrderNumber(orderNumber: string) {
+  /**
+   * Public tracking by order number + the email the order was placed with.
+   * Email is required server-side so a stranger can't read a shipment by
+   * guessing an order number.
+   */
+  async trackByOrderNumber(orderNumber: string, email: string) {
     return this.request<{ data: ShippingTracking }>(
-      `/orders/public/track/${encodeURIComponent(orderNumber)}`,
+      `/orders/public/track/${encodeURIComponent(orderNumber)}?email=${encodeURIComponent(email)}`,
     );
   }
 
