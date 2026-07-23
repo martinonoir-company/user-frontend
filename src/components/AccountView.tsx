@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   User,
   Mail,
@@ -22,6 +23,7 @@ import {
   CreditCard,
   XCircle,
   RotateCcw,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, UserProfile, Order } from "@/lib/api";
@@ -30,10 +32,34 @@ import { formatPrice } from "@/lib/price";
 type Tab = "profile" | "password" | "orders";
 
 export default function AccountView() {
+  const router = useRouter();
   const { isAuthenticated, logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("profile");
+
+  // Account deletion
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await api.deleteAccount();
+      // Clear the local session, then leave the account area.
+      logout();
+      router.replace("/?account_deleted=1");
+    } catch (err: unknown) {
+      const msg = (err as { message?: string | string[] })?.message;
+      setDeleteError(
+        (Array.isArray(msg) ? msg[0] : msg) ||
+          "Could not delete your account. Please try again or contact support.",
+      );
+      setDeleting(false);
+    }
+  }
 
   // Profile form
   const [firstName, setFirstName] = useState("");
@@ -163,6 +189,7 @@ export default function AccountView() {
   ];
 
   return (
+    <>
     <div className="content-grid py-8 md:py-12">
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-display font-bold text-ink-900">
@@ -277,6 +304,30 @@ export default function AccountView() {
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
               </form>
+
+              {/* Danger zone — account deletion */}
+              <div className="mt-8 pt-8 border-t border-red-100">
+                <h3 className="text-sm font-semibold text-red-700 flex items-center gap-2">
+                  <Trash2 size={16} />
+                  Delete account
+                </h3>
+                <p className="mt-1.5 text-sm text-ink-500 max-w-lg">
+                  Permanently delete your account. Your profile, cart and
+                  wishlist are removed and you&apos;ll be signed out. Past
+                  orders are kept for records but are no longer linked to you.
+                  You can register again later with the same email.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteError(null);
+                    setShowDeleteModal(true);
+                  }}
+                  className="mt-4 px-5 py-2.5 border border-red-300 text-red-700 hover:bg-red-50 font-medium text-sm rounded-lg transition-all"
+                >
+                  Delete my account
+                </button>
+              </div>
             </div>
           )}
 
@@ -410,5 +461,72 @@ export default function AccountView() {
         </div>
       </div>
     </div>
+
+    {/* Delete-account confirmation modal */}
+    {showDeleteModal && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/50 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-account-title"
+        onClick={() => {
+          if (!deleting) setShowDeleteModal(false);
+        }}
+      >
+        <div
+          className="w-full max-w-md bg-surface-0 rounded-2xl shadow-xl border border-ink-100 p-6"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
+            <Trash2 size={22} className="text-red-600" />
+          </div>
+          <h2
+            id="delete-account-title"
+            className="text-lg font-semibold text-ink-900"
+          >
+            Delete your account?
+          </h2>
+          <p className="mt-2 text-sm text-ink-500">
+            This can&apos;t be undone. Your profile, cart and wishlist will be
+            permanently removed and you&apos;ll be signed out. Past orders are
+            kept for records but unlinked from you. You can sign up again later
+            with the same email.
+          </p>
+
+          {deleteError && (
+            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-lg bg-red-50 text-red-700 text-sm">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <span>{deleteError}</span>
+            </div>
+          )}
+
+          <div className="mt-6 flex gap-3 justify-end">
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => setShowDeleteModal(false)}
+              className="px-4 py-2.5 border border-ink-200 text-ink-700 hover:bg-surface-1 font-medium text-sm rounded-lg transition-all disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={handleDeleteAccount}
+              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium text-sm rounded-lg transition-all disabled:opacity-60 flex items-center gap-2"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Deleting…
+                </>
+              ) : (
+                "Yes, delete my account"
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
