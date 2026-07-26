@@ -10,6 +10,7 @@ import {
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { api, QuoteResult } from "@/lib/api";
+import { COUNTRIES, countryName } from "@/lib/countries";
 import { formatPrice } from "@/lib/price";
 import LoginModal from "@/components/LoginModal";
 
@@ -46,7 +47,7 @@ export default function CheckoutView() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("Anambra");
   const [postalCode, setPostalCode] = useState("");
-  const [country] = useState("NG");
+  const [country, setCountry] = useState("NG");
   const [phone, setPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [customerNote, setCustomerNote] = useState("");
@@ -84,6 +85,17 @@ export default function CheckoutView() {
       setAgentVerified(null);
     } finally {
       setAgentVerifying(false);
+    }
+  }
+
+  // Switching country resets the state field: Nigerian orders pick from
+  // NG_STATES, international ones type a free-form state/province.
+  function handleCountryChange(next: string) {
+    setCountry(next);
+    if (next === "NG") {
+      setState("Anambra");
+    } else if (country === "NG") {
+      setState("");
     }
   }
 
@@ -312,18 +324,36 @@ export default function CheckoutView() {
                     <input type="text" value={line2} onChange={(e) => setLine2(e.target.value)} placeholder="Apartment, suite (optional)" className={inputCls} />
                   </div>
 
+                  <div>
+                    <label className="block text-xs font-semibold text-ink-700 mb-1.5">Country *</label>
+                    <select value={country} onChange={(e) => handleCountryChange(e.target.value)} className={inputCls + " appearance-none"}>
+                      {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+                    </select>
+                    {country !== "NG" && (
+                      <p className="text-xs text-ink-400 mt-1">
+                        International order — shipping rates for {countryName(country)} are calculated at the next step.
+                      </p>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-ink-700 mb-1.5">
                         City {shippingOptOut ? "" : "*"}
                       </label>
-                      <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required={!shippingOptOut} placeholder="Lagos" className={inputCls} />
+                      <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required={!shippingOptOut} placeholder={country === "NG" ? "Lagos" : "City"} className={inputCls} />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-ink-700 mb-1.5">State *</label>
-                      <select value={state} onChange={(e) => setState(e.target.value)} className={inputCls + " appearance-none"}>
-                        {NG_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                      </select>
+                      <label className="block text-xs font-semibold text-ink-700 mb-1.5">
+                        {country === "NG" ? "State *" : "State / Province *"}
+                      </label>
+                      {country === "NG" ? (
+                        <select value={state} onChange={(e) => setState(e.target.value)} className={inputCls + " appearance-none"}>
+                          {NG_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      ) : (
+                        <input type="text" value={state} onChange={(e) => setState(e.target.value)} required placeholder="State / Province" className={inputCls} />
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-ink-700 mb-1.5">
@@ -474,7 +504,7 @@ export default function CheckoutView() {
                 <div className="text-sm text-ink-700 space-y-1">
                   <p className="font-medium">{firstName} {lastName}</p>
                   <p>{line1}{line2 ? `, ${line2}` : ""}</p>
-                  <p>{city}, {state}, Nigeria</p>
+                  <p>{city}, {state}, {countryName(country)}</p>
                   {phone && <p>{phone}</p>}
                 </div>
                 <button onClick={() => setStep("shipping")} className="mt-3 text-xs text-primary-600 font-semibold hover:text-primary-700">
