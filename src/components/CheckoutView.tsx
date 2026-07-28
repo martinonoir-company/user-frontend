@@ -113,6 +113,15 @@ export default function CheckoutView() {
   const handleProceedToReview = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Phone is compulsory for a shipped order — the courier (AAJ) requires a
+    // reachable contact number for dispatch. Guard here too in case the
+    // browser's native `required` is bypassed.
+    if (!shippingOptOut && !phone.trim()) {
+      setError("A phone number is required for delivery.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -387,8 +396,17 @@ export default function CheckoutView() {
                   </label>
 
                   <div>
-                    <label className="block text-xs font-semibold text-ink-700 mb-1.5">Phone</label>
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+234 800 000 0000" className={inputCls} />
+                    <label className="block text-xs font-semibold text-ink-700 mb-1.5">
+                      Phone {shippingOptOut ? "" : "*"}
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required={!shippingOptOut}
+                      placeholder="+234 800 000 0000"
+                      className={inputCls}
+                    />
                   </div>
 
                   <div>
