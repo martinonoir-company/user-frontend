@@ -109,7 +109,7 @@ export default function Footer() {
             {/* Social */}
             <div className="mt-6 flex items-center gap-3">
               {[
-                { icon: InstagramIcon, href: "https://www.instagram.com/martinonoir?igsh=Njg0cXk0ZXVyYzNh", label: "Instagram" },
+                { icon: InstagramIcon, href: "https://www.instagram.com/martinonoirlimited?igsh=MXc3cTR6cDNteDB1Ng==", label: "Instagram" },
                 { icon: FacebookIcon, href: "https://www.facebook.com/share/17aYEqDe4V/", label: "Facebook" },
                 { icon: TiktokIcon, href: "https://www.tiktok.com/@martinonoir?_r=1&_t=ZN-96Q0wJQJNAc", label: "TikTok" },
               ].map((social) => {

@@ -5,23 +5,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, User, Globe, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { ALL_COUNTRIES } from "@/lib/all-countries";
 
 /** Return target after auth: ?redirect= (middleware) or ?next= (links). */
 function safeReturnTo(sp: URLSearchParams | null): string {
   const raw = sp?.get("redirect") ?? sp?.get("next");
   return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/account";
 }
-
-const COUNTRIES = [
-  { code: "NG", name: "Nigeria" },
-  { code: "US", name: "United States" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "GH", name: "Ghana" },
-  { code: "KE", name: "Kenya" },
-  { code: "ZA", name: "South Africa" },
-  { code: "CA", name: "Canada" },
-  { code: "AE", name: "United Arab Emirates" },
-];
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -171,7 +161,7 @@ export default function RegisterForm() {
                   value={countryCode} onChange={(e) => setCountryCode(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-lg border border-ink-200 bg-surface-0 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all appearance-none"
                 >
-                  {COUNTRIES.map((c) => (
+                  {ALL_COUNTRIES.map((c) => (
                     <option key={c.code} value={c.code}>{c.name}</option>
                   ))}
                 </select>
