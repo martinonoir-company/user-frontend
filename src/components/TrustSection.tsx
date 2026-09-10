@@ -14,8 +14,8 @@ import { useInView } from "@/hooks/useInView";
 const features = [
   {
     icon: Truck,
-    title: "Free Shipping",
-    description: "Shipping available. Worldwide delivery coverage.",
+    title: "Nationwide & International Delivery",
+    description: "Fast, reliable delivery across Nigeria and to customers worldwide.",
   },
   {
     icon: Shield,
@@ -24,8 +24,8 @@ const features = [
   },
   {
     icon: RefreshCcw,
-    title: "3-Day Returns",
-    description: "Not satisfied? Return any item within 3 days for a full refund, no questions asked.",
+    title: "30-Day Returns",
+    description: "Not satisfied? Return any item within 30 days for a full refund.",
   },
   {
     icon: CreditCard,
