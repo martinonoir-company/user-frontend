@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -15,6 +15,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { trackEvent, toMajorUnits } from "@/lib/meta-pixel";
 import OrderBarcode from "./OrderBarcode";
 import DispatchProgress from "./DispatchProgress";
 
@@ -33,6 +34,9 @@ export default function OrderConfirmation() {
   const [failureReason, setFailureReason] = useState<string | null>(null);
   // Number of reconcile attempts — used to keep polling a still-pending payment.
   const [attempt, setAttempt] = useState(0);
+  // Guard so the Meta Pixel Purchase event fires at most once, even though
+  // reconcile() may run several times while a payment settles.
+  const purchaseTracked = useRef(false);
 
   const reconcile = useCallback(async () => {
     if (!reference) return;
@@ -41,6 +45,16 @@ export default function OrderConfirmation() {
       const status = res.data.status;
       if (status === "SUCCEEDED") {
         setPayState("paid");
+        // Fire the Meta Pixel Purchase conversion once, with the real amount.
+        if (!purchaseTracked.current) {
+          purchaseTracked.current = true;
+          trackEvent("Purchase", {
+            value: toMajorUnits(res.data.amount),
+            currency: res.data.currency,
+            content_type: "product",
+            ...(orderNumber ? { order_id: orderNumber } : {}),
+          });
+        }
       } else if (status === "FAILED" || status === "CANCELLED") {
         setPayState("failed");
         setFailureReason(res.data.failureReason ?? null);
@@ -51,7 +65,7 @@ export default function OrderConfirmation() {
     } catch {
       setPayState("pending");
     }
-  }, [reference]);
+  }, [reference, orderNumber]);
 
   useEffect(() => {
     reconcile();

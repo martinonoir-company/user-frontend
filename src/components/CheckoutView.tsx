@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth-context";
 import { api, QuoteResult } from "@/lib/api";
 import { COUNTRIES, countryName } from "@/lib/countries";
 import { formatPrice } from "@/lib/price";
+import { trackEvent, toMajorUnits } from "@/lib/meta-pixel";
 import LoginModal from "@/components/LoginModal";
 
 type Step = "shipping" | "review";
@@ -121,6 +122,16 @@ export default function CheckoutView() {
       setError("A phone number is required for delivery.");
       return;
     }
+
+    // Meta Pixel: InitiateCheckout. No-op without marketing consent.
+    trackEvent("InitiateCheckout", {
+      value: toMajorUnits(subtotal),
+      currency: cur,
+      num_items: items.reduce((n, i) => n + i.quantity, 0),
+      content_type: "product",
+      content_ids: items.map((i) => i.variantId),
+      contents: items.map((i) => ({ id: i.variantId, quantity: i.quantity })),
+    });
 
     setLoading(true);
 

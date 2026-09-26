@@ -24,6 +24,7 @@ import { getVariantPrice, formatPrice } from "@/lib/price";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { useWholesaleMinQty } from "@/lib/wholesale";
+import { trackEvent, toMajorUnits } from "@/lib/meta-pixel";
 
 interface Props {
   slug: string;
@@ -96,6 +97,8 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
   const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
   // Touch-swipe state for the image gallery on touch devices.
   const touchStartX = useRef<number | null>(null);
+  // Ensures the Meta Pixel ViewContent fires once per product, not per render.
+  const viewContentTracked = useRef<string | null>(null);
 
   const { addItem } = useCart();
   const { isAuthenticated, currency } = useAuth();
@@ -131,6 +134,24 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
       cancelled = true;
     };
   }, [slug, initialProduct]);
+
+  // Meta Pixel: ViewContent — once per product (used for retargeting /
+  // Advantage+ catalog ads). No-op without marketing consent. Value uses the
+  // default variant's retail NGN price (stored in kobo).
+  useEffect(() => {
+    if (!product || viewContentTracked.current === product.id) return;
+    viewContentTracked.current = product.id;
+    const v = pickDefaultVariant(product);
+    const priceMinor = v ? Number(v.retailPriceNgn) : NaN;
+    trackEvent("ViewContent", {
+      content_type: "product",
+      content_ids: [product.id],
+      content_name: product.name,
+      ...(Number.isFinite(priceMinor)
+        ? { value: toMajorUnits(priceMinor), currency: "NGN" }
+        : {}),
+    });
+  }, [product]);
 
   // Fetch live promotional discounts for all of this product's variants so
   // the badge can appear the moment a discounted variant is selected. Keyed

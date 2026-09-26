@@ -34,6 +34,9 @@ export default function CookieConsent() {
         STORAGE_KEY,
         JSON.stringify({ consent: "all", ts: Date.now() })
       );
+      // Let consent-gated trackers (Meta Pixel) start immediately, without a
+      // page reload. See lib/meta-pixel.ts CONSENT_GRANTED_EVENT.
+      window.dispatchEvent(new Event("mn:cookie-consent-granted"));
     } catch {}
     setVisible(false);
   };

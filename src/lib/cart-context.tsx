@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { api, ServerCartItem } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { trackEvent, toMajorUnits } from '@/lib/meta-pixel';
 
 export interface CartItem {
   variantId: string;
@@ -331,6 +332,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
             unavailable: false,
           },
         ];
+      });
+
+      // Meta Pixel: AddToCart. No-op without marketing consent. Value uses the
+      // NGN price (the storefront's primary market); prices are in kobo.
+      trackEvent('AddToCart', {
+        value: toMajorUnits(item.priceNgn * quantity),
+        currency: 'NGN',
+        content_type: 'product',
+        content_ids: [item.variantId],
+        content_name: item.productName,
+        contents: [{ id: item.variantId, quantity }],
       });
 
       // If authenticated, persist to server in background, then reconcile
