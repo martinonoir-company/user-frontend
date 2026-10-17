@@ -17,6 +17,7 @@ import {
   AlertCircle,
   XCircle,
   Loader2,
+  Share2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api, Product, ProductVariant, StockLevel, VariantPromotion } from "@/lib/api";
@@ -83,6 +84,9 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
   const [addedFeedback, setAddedFeedback] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  // Briefly true after copying the product link to the clipboard (fallback when
+  // the browser has no native share sheet), so the button can confirm it.
+  const [shareCopied, setShareCopied] = useState(false);
   const [stock, setStock] = useState<StockState>({ status: "loading" });
   // Admin-configured wholesale minimum order quantity.
   const MIN_WHOLESALE_QTY = useWholesaleMinQty();
@@ -239,6 +243,35 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
       cancelled = true;
     };
   }, [selectedVariant]);
+
+  // Share this product. Uses the native Web Share sheet where available
+  // (mobile browsers, modern desktops); otherwise copies the link to the
+  // clipboard and flashes a "Link copied" confirmation on the button.
+  const handleShare = async () => {
+    if (!product) return;
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/product/${product.slug}`
+        : `/product/${product.slug}`;
+    const shareData = {
+      title: product.name,
+      text: `Check out ${product.name} on Martinonoir`,
+      url,
+    };
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+      }
+    } catch {
+      // User dismissed the share sheet, or the copy was blocked — no-op.
+    }
+  };
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return;
@@ -800,6 +833,28 @@ export default function ProductDetail({ slug, initialProduct }: Props) {
               aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
               <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} />
+            </button>
+            <button
+              onClick={handleShare}
+              disabled={!product}
+              className={`relative w-12 h-12 flex items-center justify-center border rounded-lg transition-all ${
+                shareCopied
+                  ? "border-green-200 bg-green-50 text-green-600"
+                  : "border-ink-200 text-ink-600 hover:bg-surface-1 hover:border-ink-300"
+              }`}
+              aria-label="Share this product"
+              title="Share"
+            >
+              {shareCopied ? (
+                <CheckCircle2 size={20} />
+              ) : (
+                <Share2 size={20} />
+              )}
+              {shareCopied ? (
+                <span className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink-900 px-2 py-1 text-xs font-medium text-white shadow-lg">
+                  Link copied
+                </span>
+              ) : null}
             </button>
           </div>
 
