@@ -99,6 +99,19 @@ class ApiClient {
     return this.request<void>('/auth/account', { method: 'DELETE' });
   }
 
+  /**
+   * Check whether a deletable customer account exists for an email. Powers the
+   * first step of the public account-deletion page (reveal the password field
+   * only for a real account). The destructive delete still requires full
+   * authentication (login → deleteAccount).
+   */
+  async checkAccountDeletionEmail(email: string) {
+    return this.request<{ data: { exists: boolean } }>(
+      '/auth/account-deletion/check-email',
+      { method: 'POST', body: JSON.stringify({ email }) },
+    );
+  }
+
   async forgotPassword(email: string) {
     return this.request<void>('/auth/forgot-password', {
       method: 'POST',
