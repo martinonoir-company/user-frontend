@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   MapPin, CreditCard, ShoppingBag, ArrowRight, ArrowLeft,
-  Shield, Truck, AlertCircle, CheckCircle2, Lock, Loader2,
+  Shield, Truck, AlertCircle, CheckCircle2, Lock, Loader2, Tag,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
@@ -39,6 +39,15 @@ export default function CheckoutView() {
   const [authError, setAuthError] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [quote, setQuote] = useState<QuoteResult | null>(null);
+
+  // Promo / coupon code — entered and applied on the Review & Pay step so the
+  // discount is reflected in the quote total that's charged at Paystack.
+  const [couponCode, setCouponCode] = useState("");
+  const [couponApplying, setCouponApplying] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  // The code currently baked into `quote` (so we can label it as applied and
+  // pass the SAME code to checkout). Cleared when the code is removed/edited.
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
   // Shipping form
   const [firstName, setFirstName] = useState("");
@@ -110,6 +119,30 @@ export default function CheckoutView() {
     }
   }, [items.length, router]);
 
+  // Fetch a fresh quote for the current cart + shipping context, optionally
+  // with a promo code. Returns the quote so callers can inspect coupon
+  // validity. Shared by the "Continue to Review" step and the coupon
+  // apply/remove actions so every total stays consistent with what's charged.
+  const fetchQuote = async (code?: string): Promise<QuoteResult> => {
+    const quoteItems = items.map((item) => ({
+      variantId: item.variantId,
+      sku: item.sku,
+      productName: item.productName,
+      variantName: item.variantName,
+      quantity: item.quantity,
+      unitPrice: cur === "USD" ? item.priceUsd : item.priceNgn,
+      weightKg: 0.5,
+    }));
+    const res = await api.getQuote(quoteItems, {
+      currency: cur,
+      country,
+      state,
+      channel: "STOREFRONT",
+      couponCode: code?.trim() || undefined,
+    });
+    return res.data;
+  };
+
   // Fetch quote when moving to review
   const handleProceedToReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,29 +169,53 @@ export default function CheckoutView() {
     setLoading(true);
 
     try {
-      const quoteItems = items.map((item) => ({
-        variantId: item.variantId,
-        sku: item.sku,
-        productName: item.productName,
-        variantName: item.variantName,
-        quantity: item.quantity,
-        unitPrice: cur === "USD" ? item.priceUsd : item.priceNgn,
-        weightKg: 0.5,
-      }));
-
-      const res = await api.getQuote(quoteItems, {
-        currency: cur,
-        country,
-        state,
-        channel: "STOREFRONT",
-      });
-
-      setQuote(res.data);
+      // Carry any already-applied coupon forward when re-entering review.
+      const data = await fetchQuote(appliedCoupon ?? undefined);
+      setQuote(data);
       setStep("review");
     } catch {
       setError("Failed to calculate order total. Please try again.");
     }
     setLoading(false);
+  };
+
+  // Apply the typed promo code: re-quote with it and reflect the result. The
+  // server echoes `coupon` only when the code is valid; otherwise we surface an
+  // error and leave the quote (and total) untouched.
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) return;
+    setCouponError(null);
+    setCouponApplying(true);
+    try {
+      const data = await fetchQuote(code);
+      if (data.coupon?.code) {
+        setQuote(data);
+        setAppliedCoupon(data.coupon.code);
+      } else {
+        setCouponError("This promo code is invalid or not applicable.");
+      }
+    } catch {
+      setCouponError("Couldn't apply the code. Please try again.");
+    } finally {
+      setCouponApplying(false);
+    }
+  };
+
+  // Remove an applied coupon: re-quote without it so the total reverts.
+  const handleRemoveCoupon = async () => {
+    setCouponError(null);
+    setCouponApplying(true);
+    try {
+      const data = await fetchQuote(undefined);
+      setQuote(data);
+      setAppliedCoupon(null);
+      setCouponCode("");
+    } catch {
+      setCouponError("Couldn't update the total. Please try again.");
+    } finally {
+      setCouponApplying(false);
+    }
   };
 
   // Place order, then initiate payment and hand off to the Paystack
@@ -190,6 +247,9 @@ export default function CheckoutView() {
         currency: cur,
         guestEmail: !isAuthenticated ? guestEmail : undefined,
         customerNote: customerNote || undefined,
+        // Pass the SAME coupon baked into the quote so the server applies the
+        // identical discount — the Paystack amount then matches the total shown.
+        couponCode: appliedCoupon ?? undefined,
         agentCode: agentVerified?.code,
         shippingOptOut,
         idempotencyKey: `checkout_${Date.now()}_${Math.random().toString(36).slice(2)}`,
@@ -539,6 +599,71 @@ export default function CheckoutView() {
                 <button onClick={() => setStep("shipping")} className="mt-3 text-xs text-primary-600 font-semibold hover:text-primary-700">
                   Edit Address
                 </button>
+              </div>
+
+              {/* Promo code — applied here so the discount is reflected in the
+                  total that's charged at Paystack. */}
+              <div className="bg-surface-0 border border-ink-100 rounded-xl p-6 md:p-8 mb-6">
+                <h2 className="text-lg font-semibold text-ink-900 mb-4 flex items-center gap-2">
+                  <Tag size={18} className="text-primary-600" />
+                  Promo Code
+                </h2>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between px-4 py-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 size={16} className="text-green-600" />
+                      <span className="font-mono font-semibold text-green-700">
+                        {appliedCoupon}
+                      </span>
+                      <span className="text-ink-500">applied</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      disabled={couponApplying}
+                      className="text-xs text-ink-500 hover:text-red-600 underline disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => {
+                          setCouponCode(e.target.value.toUpperCase());
+                          setCouponError(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            void handleApplyCoupon();
+                          }
+                        }}
+                        placeholder="Enter promo code"
+                        maxLength={32}
+                        className={inputCls + " font-mono uppercase"}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        disabled={!couponCode.trim() || couponApplying}
+                        className="px-5 py-2.5 bg-ink-900 hover:bg-ink-800 text-white text-sm font-semibold rounded-lg disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {couponApplying ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          "Apply"
+                        )}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-xs text-red-600 mt-2">⚠ {couponError}</p>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="flex justify-between items-center mt-6">
