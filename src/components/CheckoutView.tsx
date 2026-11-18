@@ -139,6 +139,20 @@ export default function CheckoutView() {
       state,
       channel: "STOREFRONT",
       couponCode: code?.trim() || undefined,
+      // Send the full recipient address (unless shipping is opted out) so the
+      // preview reaches the live AAJ quote and shows the real fee that will be
+      // charged. The server blocks an NG order whose quote isn't live.
+      recipient: shippingOptOut
+        ? undefined
+        : {
+            name: `${firstName} ${lastName}`.trim(),
+            phone: phone || undefined,
+            email: isAuthenticated ? undefined : guestEmail || undefined,
+            line1: line1,
+            line2: line2 || undefined,
+            city: city,
+            postalCode: postalCode || undefined,
+          },
     });
     return res.data;
   };
@@ -173,8 +187,12 @@ export default function CheckoutView() {
       const data = await fetchQuote(appliedCoupon ?? undefined);
       setQuote(data);
       setStep("review");
-    } catch {
-      setError("Failed to calculate order total. Please try again.");
+    } catch (err: unknown) {
+      const msg = (err as { message?: string | string[] })?.message;
+      setError(
+        (Array.isArray(msg) ? msg[0] : msg) ||
+          "Failed to calculate order total. Please try again.",
+      );
     }
     setLoading(false);
   };
