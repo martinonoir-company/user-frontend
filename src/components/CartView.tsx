@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, AlertTriangle, TrendingUp } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/price";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, QuoteResult } from "@/lib/api";
 import { useWholesaleMinQty } from "@/lib/wholesale";
 
@@ -51,7 +51,15 @@ export default function CartView() {
     }
   };
 
-  // Fetch quote when items change
+  // Auto-fetch the quote whenever the cart contents (or currency) change, so the
+  // Shipping amount shows without the user having to click "Update Quote".
+  // Keyed on variantId+quantity of each line; coupon is applied separately.
+  const cartKey = items.map((i) => `${i.variantId}:${i.quantity}`).join("|");
+  useEffect(() => {
+    fetchQuote(couponCode.trim() || undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartKey, currency]);
+
   // Using subtotal as display fallback
   const subtotal = getSubtotal(currency);
   const hasUnavailable = items.some((i) => i.unavailable);
