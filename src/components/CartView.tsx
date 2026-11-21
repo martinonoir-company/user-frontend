@@ -30,10 +30,15 @@ export default function CartView() {
         unitPrice: currency === "USD" ? item.priceUsd : item.priceNgn,
       }));
 
+      // NOTE: the cart quote is used only for subtotal, coupons and auto-promos.
+      // Shipping is intentionally NOT shown here (we display "Calculated at
+      // checkout") because we don't yet know the customer's delivery address.
+      // A placeholder state is required by the quote endpoint for NG, but its
+      // shipping result is deliberately ignored in the cart UI below.
       const res = await api.getQuote(quoteItems, {
         currency,
         country: "NG",
-        state: "Anambra",
+        state: "Lagos",
         couponCode: coupon || undefined,
         channel: "STOREFRONT",
       });
@@ -247,9 +252,10 @@ export default function CartView() {
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-ink-900 text-white text-sm font-medium rounded-lg hover:bg-ink-800 transition-colors"
+                disabled={loadingQuote}
+                className="px-4 py-2 bg-ink-900 text-white text-sm font-medium rounded-lg hover:bg-ink-800 transition-colors disabled:opacity-60"
               >
-                Apply
+                {loadingQuote ? "..." : "Apply"}
               </button>
             </form>
 
@@ -287,21 +293,26 @@ export default function CartView() {
 
               <div className="flex justify-between">
                 <span className="text-ink-500">Shipping</span>
-                <span className="font-medium text-ink-900">
-                  {quote?.shippingMethod
-                    ? quote.shippingTotal === 0
-                      ? "Free"
-                      : formatPrice(quote.shippingTotal, currency)
-                    : "Calculated at checkout"}
+                <span className="font-medium text-ink-500">
+                  Calculated at checkout
                 </span>
               </div>
 
-              <div className="pt-3 border-t border-ink-200 flex justify-between">
+              <div className="pt-3 border-t border-ink-200 flex justify-between items-baseline">
                 <span className="font-semibold text-ink-900">Total</span>
                 <span className="text-xl font-bold text-ink-900">
-                  {formatPrice(quote?.grandTotal ?? subtotal, currency)}
+                  {/* Cart total excludes shipping (unknown until checkout). */}
+                  {formatPrice(
+                    quote
+                      ? quote.grandTotal - quote.shippingTotal
+                      : subtotal,
+                    currency,
+                  )}
                 </span>
               </div>
+              <p className="text-xs text-ink-400 text-right">
+                Shipping added at checkout
+              </p>
 
               {quote?.savings ? (
                 <p className="text-xs text-green-600 font-medium text-right">
@@ -309,13 +320,6 @@ export default function CartView() {
                 </p>
               ) : null}
             </div>
-
-            <button
-              onClick={() => fetchQuote(couponCode || undefined)}
-              className="w-full mt-4 py-2 text-sm text-primary-700 font-medium border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors"
-            >
-              {loadingQuote ? "Calculating..." : "Update Quote"}
-            </button>
 
             {hasUnavailable && (
               <p className="mt-3 text-xs text-red-600 flex items-start gap-1.5">
