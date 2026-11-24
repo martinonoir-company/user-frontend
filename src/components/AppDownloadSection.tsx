@@ -14,7 +14,8 @@ import { useInView } from "@/hooks/useInView";
  */
 const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.martinonoir.mobile";
-const APP_STORE_URL = "";
+const APP_STORE_URL =
+  "https://apps.apple.com/no/app/martinonoir/id6821432369";
 
 /** A dark store button: platform icon + "GET IT ON / Store name". */
 function StoreButton({
