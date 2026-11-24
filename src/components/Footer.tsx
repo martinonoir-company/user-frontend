@@ -100,6 +100,13 @@ export default function Footer() {
                 <Phone size={14} />
                 0803 801 0651
               </a>
+              <a
+                href="tel:+2347078447370"
+                className="flex items-center gap-2 text-sm text-white/40 hover:text-accent-gold transition-colors duration-micro"
+              >
+                <Phone size={14} />
+                0707 844 7370
+              </a>
               <span className="flex items-center gap-2 text-sm text-white/40">
                 <MapPin size={14} />
                 GFD 57 Young Shall Grow Shopping Complex, 2 Johnson Main Market Onitsha, Anambra State, Nigeria

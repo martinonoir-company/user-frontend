@@ -32,7 +32,7 @@ const channels = [
   {
     icon: Phone,
     label: "Call Us",
-    value: "0803 801 0651",
+    value: "0803 801 0651 · 0707 844 7370",
     description: "Available Monday – Friday, 9 am – 6 pm WAT.",
     href: "tel:+2348038010651",
     cta: "Call now",
@@ -522,17 +522,30 @@ export default function ContactPage() {
                         Call us directly for urgent order issues or
                         time-sensitive inquiries.
                       </p>
-                      <a
-                        href="tel:+2348038010651"
-                        className="group inline-flex items-center gap-2 px-5 py-2.5 bg-primary-700 hover:bg-primary-600 text-white text-sm font-semibold rounded-lg transition-all duration-standard hover:shadow-md"
-                      >
-                        <Phone size={14} />
-                        0803 801 0651
-                        <ArrowRight
-                          size={13}
-                          className="transition-transform duration-standard group-hover:translate-x-1"
-                        />
-                      </a>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <a
+                          href="tel:+2348038010651"
+                          className="group inline-flex items-center gap-2 px-5 py-2.5 bg-primary-700 hover:bg-primary-600 text-white text-sm font-semibold rounded-lg transition-all duration-standard hover:shadow-md"
+                        >
+                          <Phone size={14} />
+                          0803 801 0651
+                          <ArrowRight
+                            size={13}
+                            className="transition-transform duration-standard group-hover:translate-x-1"
+                          />
+                        </a>
+                        <a
+                          href="tel:+2347078447370"
+                          className="group inline-flex items-center gap-2 px-5 py-2.5 bg-primary-800/60 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-all duration-standard hover:shadow-md"
+                        >
+                          <Phone size={14} />
+                          0707 844 7370
+                          <ArrowRight
+                            size={13}
+                            className="transition-transform duration-standard group-hover:translate-x-1"
+                          />
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>

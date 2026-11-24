@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import FeaturedCategories from "@/components/FeaturedCategories";
 import FeaturedProducts from "@/components/FeaturedProducts";
+import AppDownloadSection from "@/components/AppDownloadSection";
 import TrustSection from "@/components/TrustSection";
 import Footer from "@/components/Footer";
 
@@ -13,6 +14,7 @@ export default function Home() {
         <Hero />
         <FeaturedCategories />
         <FeaturedProducts />
+        <AppDownloadSection />
         <TrustSection />
       </main>
       <Footer />
