@@ -373,6 +373,27 @@ class ApiClient {
     return this.request<{ data: Order }>(`/orders/number/${orderNumber}`);
   }
 
+  // ── Order ratings ──
+
+  /** The signed-in user's rating for an order, or null if not yet rated. */
+  async getOrderRating(orderId: string) {
+    return this.request<{ data: OrderRating | null }>(
+      `/ratings/order/${orderId}`,
+    );
+  }
+
+  /** Create or update the user's rating for a paid order. */
+  async submitOrderRating(input: {
+    orderId: string;
+    stars: number;
+    comment?: string;
+  }) {
+    return this.request<{ data: OrderRating }>(`/ratings`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
   // ── Shipping (AAJ Express) ──
 
   /**
@@ -958,6 +979,16 @@ export interface WishlistItem {
   product: Product;
   variant?: ProductVariant;
   createdAt: string;
+}
+
+export interface OrderRating {
+  id: string;
+  orderId: string;
+  userId: string;
+  stars: number;
+  comment?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UserProfile {

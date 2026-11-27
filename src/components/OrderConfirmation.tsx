@@ -18,6 +18,7 @@ import { api } from "@/lib/api";
 import { trackEvent, toMajorUnits } from "@/lib/meta-pixel";
 import OrderBarcode from "./OrderBarcode";
 import DispatchProgress from "./DispatchProgress";
+import OrderRating from "./OrderRating";
 
 type PayState = "verifying" | "paid" | "failed" | "pending" | "none";
 
@@ -37,6 +38,9 @@ export default function OrderConfirmation() {
   // Guard so the Meta Pixel Purchase event fires at most once, even though
   // reconcile() may run several times while a payment settles.
   const purchaseTracked = useRef(false);
+  // Resolved order id (from the order number) so the rating block can load +
+  // submit. Only fetched once the payment is confirmed paid.
+  const [orderId, setOrderId] = useState<string | null>(null);
 
   const reconcile = useCallback(async () => {
     if (!reference) return;
@@ -78,6 +82,24 @@ export default function OrderConfirmation() {
     const t = setTimeout(() => setAttempt((a) => a + 1), 3000);
     return () => clearTimeout(t);
   }, [payState, attempt]);
+
+  // Once paid, resolve the order id from its number so the rating block can
+  // load/submit. Best-effort — if it fails, the rating block just won't show.
+  useEffect(() => {
+    if (payState !== "paid" || !orderNumber || orderId) return;
+    let cancelled = false;
+    api
+      .getOrderByNumber(orderNumber)
+      .then((res) => {
+        if (!cancelled) setOrderId(res.data.id);
+      })
+      .catch(() => {
+        /* non-fatal: rating block simply stays hidden */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [payState, orderNumber, orderId]);
 
   // ── Payment failed ──
   if (payState === "failed") {
@@ -195,6 +217,12 @@ export default function OrderConfirmation() {
       {/* Post-payment dispatch progress — only after a confirmed payment. */}
       {payState === "paid" && orderNumber && (
         <DispatchProgress orderNumber={orderNumber} />
+      )}
+
+      {/* Rate your order — only after a confirmed payment, once the order id
+          has resolved. Never shown for pending/failed/cancelled orders. */}
+      {payState === "paid" && orderId && (
+        <OrderRating orderId={orderId} className="mb-8" />
       )}
 
       <div className="bg-surface-0 border border-ink-100 rounded-xl p-6 md:p-8 text-left mb-8">

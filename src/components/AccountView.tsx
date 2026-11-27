@@ -24,10 +24,26 @@ import {
   XCircle,
   RotateCcw,
   Trash2,
+  Star,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, UserProfile, Order } from "@/lib/api";
 import { formatPrice } from "@/lib/price";
+import OrderRating from "./OrderRating";
+
+// Order statuses that mean the customer has successfully paid — the only
+// states in which an order may be rated (never PENDING_PAYMENT or CANCELLED).
+const RATEABLE_ORDER_STATUSES = new Set([
+  "PAID",
+  "PROCESSING",
+  "SHIPPED",
+  "DELIVERED",
+  "COMPLETED",
+  "RETURN_REQUESTED",
+  "RETURN_APPROVED",
+  "RETURNED",
+  "REFUNDED",
+]);
 
 type Tab = "profile" | "password" | "orders";
 
@@ -37,6 +53,8 @@ export default function AccountView() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("profile");
+  // Which order's rating panel is expanded (orderId), if any.
+  const [ratingOpen, setRatingOpen] = useState<string | null>(null);
 
   // Account deletion
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -451,6 +469,28 @@ export default function AccountView() {
                             {formatPrice(order.grandTotal, order.currency)}
                           </p>
                         </div>
+
+                        {/* Rate this order — only for successfully-paid orders.
+                            Collapsed by default so the list stays compact. */}
+                        {RATEABLE_ORDER_STATUSES.has(order.status) && (
+                          <div className="mt-3 pt-3 border-t border-ink-100">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setRatingOpen((cur) =>
+                                  cur === order.id ? null : order.id,
+                                )
+                              }
+                              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-700 hover:text-primary-800 transition-colors"
+                            >
+                              <Star size={14} className="fill-amber-400 text-amber-400" />
+                              {ratingOpen === order.id ? "Hide rating" : "Rate this order"}
+                            </button>
+                            {ratingOpen === order.id && (
+                              <OrderRating orderId={order.id} className="mt-3" />
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
